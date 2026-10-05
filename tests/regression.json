@@ -1,0 +1,147 @@
+{
+  "version": "1.0",
+  "description": "Regression suite for NEXUS AI. Каждый кейс — вопрос + ожидаемые ключевые слова (любое из списка) + эксперт.",
+  "cases": [
+    {
+      "id": "arch_001",
+      "expert": "system_architect",
+      "message": "Что такое API Gateway? Ответь тремя предложениями.",
+      "expected_keywords": ["api gateway", "точк", "вход", "маршрутиз", "запрос"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "arch_002",
+      "expert": "system_architect",
+      "message": "Сравни монолит и микросервисы кратко.",
+      "expected_keywords": ["монолит", "микросервис"],
+      "max_elapsed_s": 240
+    },
+    {
+      "id": "arch_003",
+      "expert": "system_architect",
+      "message": "Что такое CQRS и когда его применять?",
+      "expected_keywords": ["cqrs", "команд", "запрос", "чтени"],
+      "max_elapsed_s": 240
+    },
+    {
+      "id": "arch_004",
+      "expert": "system_architect",
+      "message": "Назови 3 основных принципа построения отказоустойчивой системы.",
+      "expected_keywords": ["резерв", "дубл", "отказ", "кластер", "реплик"],
+      "max_elapsed_s": 240
+    },
+    {
+      "id": "code_001",
+      "expert": "software_engineer",
+      "message": "Как в Python прочитать JSON-файл? Покажи код.",
+      "expected_keywords": ["import json", "json.load", "open"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "code_002",
+      "expert": "software_engineer",
+      "message": "Напиши SQL-запрос для выборки топ-10 клиентов по сумме заказов.",
+      "expected_keywords": ["select", "order by", "limit", "group by", "sum"],
+      "max_elapsed_s": 240
+    },
+    {
+      "id": "code_003",
+      "expert": "software_engineer",
+      "message": "Что такое Docker и зачем он нужен? Кратко.",
+      "expected_keywords": ["контейнер", "образ", "изоляц", "docker"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "fintech_001",
+      "expert": "fintech",
+      "message": "Что такое эквайринг? Кратко.",
+      "expected_keywords": ["эквайринг", "карт", "платёж", "платеж", "торгов"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "fintech_002",
+      "expert": "fintech",
+      "message": "Какие есть риски при обработке платежей картами?",
+      "expected_keywords": ["риск", "chargeback", "фрод", "мошенн", "pci"],
+      "max_elapsed_s": 240
+    },
+    {
+      "id": "fintech_003",
+      "expert": "fintech",
+      "message": "Как рассчитывается комиссия платёжной системы?",
+      "expected_keywords": ["комисси", "процент", "ставк", "расчёт", "расчет"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "law_001",
+      "expert": "digital_law",
+      "message": "Какой закон в России регулирует персональные данные?",
+      "expected_keywords": ["152", "фз", "персональн"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "law_002",
+      "expert": "digital_law",
+      "message": "Что такое GDPR и кому он применяется?",
+      "expected_keywords": ["gdpr", "европ", "персональн", "защит"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "law_003",
+      "expert": "digital_law",
+      "message": "Нужно ли согласие пользователя на обработку cookies?",
+      "expected_keywords": ["согласи", "cookie", "персональн"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "scoring_001",
+      "expert": "project_scoring",
+      "message": "Что такое RICE-скоринг? Кратко.",
+      "expected_keywords": ["rice", "reach", "impact", "confidence", "effort"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "scoring_002",
+      "expert": "project_scoring",
+      "message": "Как посчитать ROI проекта?",
+      "expected_keywords": ["roi", "прибыл", "затрат", "доход"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "scoring_003",
+      "expert": "project_scoring",
+      "message": "Что такое NPV и IRR? В чём разница?",
+      "expected_keywords": ["npv", "irr", "дисконт", "ставк"],
+      "max_elapsed_s": 240
+    },
+    {
+      "id": "invest_001",
+      "expert": "investment_advisor",
+      "message": "Что такое диверсификация портфеля?",
+      "expected_keywords": ["диверсифик", "риск", "актив", "портфел"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "invest_002",
+      "expert": "investment_advisor",
+      "message": "Что показывает коэффициент Шарпа?",
+      "expected_keywords": ["шарп", "sharpe", "доходност", "риск", "волатильн"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "invest_003",
+      "expert": "investment_advisor",
+      "message": "Разница между акциями и облигациями кратко.",
+      "expected_keywords": ["акци", "облигац", "доход", "риск", "процент"],
+      "max_elapsed_s": 180
+    },
+    {
+      "id": "orchestration_001",
+      "expert": null,
+      "message": "Оцени проект платёжной системы: нужна архитектура, финансовый анализ и юридические риски.",
+      "expected_keywords": ["архитектур", "финанс", "прав", "юрид", "риск"],
+      "max_elapsed_s": 600,
+      "mode": "orchestration"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-10-05_11-13-15",
+  "summary": {
+    "total": 3,
+    "pass": 3,
+    "fail": 0,
+    "elapsed_s": 275
+  },
+  "results": [
+    {
+      "id": "arch_001",
+      "status": "pass",
+      "matched": 5,
+      "total": 5,
+      "elapsed_s": 25,
+      "keywords": " api gateway точк вход маршрутиз запрос"
+    },
+    {
+      "id": "arch_002",
+      "status": "pass",
+      "matched": 2,
+      "total": 2,
+      "elapsed_s": 60,
+      "keywords": " монолит микросервис"
+    },
+    {
+      "id": "arch_003",
+      "status": "pass",
+      "matched": 4,
+      "total": 4,
+      "elapsed_s": 186,
+      "keywords": " cqrs команд запрос чтени"
+    }
+  ]
+}

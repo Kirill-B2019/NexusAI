@@ -1,0 +1,9 @@
+.env
+backups/
+data/
+models/
+loras/
+lora/datasets/manual/*.jsonl
+lora/sources/synthetic/*.jsonl
+__pycache__/
+*.pyc

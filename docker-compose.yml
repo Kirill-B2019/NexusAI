@@ -1,0 +1,99 @@
+services:
+  model-server:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: nexus-model
+    command: >
+      --model /models/Qwen3-4B-Q4_K_M.gguf
+      --threads 4
+      --ctx-size 4096
+      --batch-size 512
+      --parallel 2
+      --cont-batching
+      --load-mode mmap+mlock
+      --host 0.0.0.0
+      --port 8080
+    volumes:
+      - ./models:/models
+      - ./loras:/loras
+    mem_limit: 5G
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17
+    container_name: nexus-postgres
+    environment:
+      POSTGRES_DB: nexusai
+      POSTGRES_USER: nexusai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      -c shared_buffers=2GB
+      -c work_mem=16MB
+      -c max_connections=30
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    mem_limit: 3G
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: nexus-qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    mem_limit: 2G
+    restart: unless-stopped
+
+  embeddings:
+    build: ./embeddings
+    container_name: nexus-embeddings
+    environment:
+      - EMBEDDING_MODEL=intfloat/multilingual-e5-small
+    volumes:
+      - embeddings_cache:/app/.cache/huggingface
+    mem_limit: 1G
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    container_name: nexus-api
+    environment:
+      - MODEL_SERVER_URL=http://nexus-model:8080
+      - MODEL_TIMEOUT=900
+      - EXPERT_TIMEOUT=900
+      - DATABASE_URL=${DATABASE_URL}
+      - QDRANT_URL=http://nexus-qdrant:6333
+      - EMBEDDINGS_URL=http://nexus-embeddings:8001
+      - DOCUMENTS_DIR=/app/data/documents
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - LOG_LEVEL=${LOG_LEVEL}
+    volumes:
+      - documents_data:/app/data/documents
+    depends_on:
+      - model-server
+      - postgres
+      - qdrant
+      - embeddings
+    mem_limit: 1G
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nexus-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/index.html:/usr/share/nginx/html/index.html
+      - ./nginx/debug:/usr/share/nginx/html/debug
+    depends_on:
+      - api
+    mem_limit: 128M
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  embeddings_cache:
+  documents_data:

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS AI</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background: #fafafa; }
+h1 { color: #1a1a2e; margin: 0 0 16px; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+select, input, button { padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+input { flex: 1; min-width: 200px; }
+button { background: #1a1a2e; color: #fff; border: none; cursor: pointer; font-weight: 500; }
+button:hover { background: #2d2d5e; }
+button:disabled { background: #888; cursor: not-allowed; }
+label { font-size: 14px; display: flex; align-items: center; gap: 4px; }
+#chat { border: 1px solid #ddd; border-radius: 8px; padding: 16px; height: 500px; overflow-y: auto; background: #fff; margin-bottom: 12px; }
+.msg { margin: 8px 0; padding: 12px 16px; border-radius: 8px; max-width: 90%; white-space: pre-wrap; word-wrap: break-word; }
+.msg.user { background: #e3f2fd; margin-left: auto; }
+.msg.ai { background: #f5f5f5; }
+.msg.error { background: #ffebee; color: #c62828; }
+.msg details { margin-top: 8px; font-size: 13px; color: #666; }
+.msg details summary { cursor: pointer; user-select: none; }
+.msg details pre { margin: 8px 0 0; white-space: pre-wrap; font-family: inherit; }
+.msg h2 { margin: 12px 0 8px; font-size: 18px; color: #1a1a2e; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+.msg h3 { margin: 10px 0 6px; font-size: 16px; color: #2d2d5e; }
+.msg table { border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+.msg th, .msg td { border: 1px solid #ccc; padding: 4px 8px; }
+.msg code { background: #eee; padding: 2px 4px; border-radius: 3px; font-size: 13px; }
+.meta { margin-top: 10px; font-size: 12px; color: #888; border-top: 1px dashed #ddd; padding-top: 6px; }
+.tag { display: inline-block; background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<h1>NEXUS AI</h1>
+<div style="margin-bottom:16px;padding:10px;background:#f5f5f5;border-radius:6px;font-size:13px;"><strong>Debug UI:</strong> <a href="/debug/chat.html" style="margin-left:8px;">💬 Чат (SSE)</a> · <a href="/debug/documents.html" style="margin-left:8px;">📄 Документы</a> · <a href="/api/docs" style="margin-left:8px;">📖 API Docs</a></div>
+<div class="toolbar">
+  <select id="expert">
+    <option value="">🤖 Авто-выбор (оркестратор)</option>
+    <option value="system_architect">🏗 Системный архитектор</option>
+    <option value="software_engineer">💻 Инженер-программист</option>
+    <option value="fintech">💰 Финтех-эксперт</option>
+    <option value="digital_law">⚖️ Цифровое право</option>
+  </select>
+  <label><input type="checkbox" id="thinking"> Thinking</label>
+  <label><input type="checkbox" id="llmAgg"> LLM-агрегатор</label>
+  <input id="projectId" placeholder="Project ID (опционально)">
+</div>
+<div id="chat"></div>
+<div class="toolbar">
+  <input id="msg" placeholder="Введите вопрос..." autofocus>
+  <button id="sendBtn" onclick="send()">Отправить</button>
+</div>
+<script>
+const chat = document.getElementById('chat');
+const msgInput = document.getElementById('msg');
+const sendBtn = document.getElementById('sendBtn');
+
+function mdLite(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+async function send() {
+  const msg = msgInput.value.trim();
+  const expert = document.getElementById('expert').value;
+  const thinking = document.getElementById('thinking').checked;
+  const use_llm_aggregator = document.getElementById('llmAgg').checked;
+  const project_id = document.getElementById('projectId').value.trim() || null;
+  if (!msg) return;
+
+  const orchestrate = !expert;
+
+  chat.innerHTML += `<div class="msg user">${mdLite(msg)}</div>`;
+  msgInput.value = '';
+  sendBtn.disabled = true;
+  const loadingId = 'loading-' + Date.now();
+  const hint = orchestrate
+    ? '⏳ Совет экспертов работает (может занять 5-10 мин)...'
+    : (thinking ? '⏳ Thinking-режим (2-5 мин)...' : '⏳ Генерация...');
+  chat.innerHTML += `<div class="msg ai" id="${loadingId}">${hint}</div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const body = {
+      message: msg,
+      thinking,
+      project_id,
+      orchestrate,
+      use_llm_aggregator
+    };
+    if (expert) body.expert = expert;
+
+    const r = await fetch('/api/v1/chat', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    document.getElementById(loadingId).remove();
+
+    if (!r.ok) {
+      chat.innerHTML += `<div class="msg error">Ошибка ${r.status}: ${data.detail || JSON.stringify(data)}</div>`;
+    } else if (data.mode === 'orchestrated') {
+      let html = `<div class="msg ai">`;
+      html += `<div class="meta">`;
+      html += `<span class="tag">${data.route_method}</span>`;
+      html += `Эксперты: ${data.experts.join(', ')} · ok ${data.summary.ok}/${data.summary.total} · ${data.aggregator}`;
+      html += `</div>`;
+      html += mdLite(data.aggregated);
+      html += `</div>`;
+      chat.innerHTML += html;
+    } else {
+      let html = `<div class="msg ai">`;
+      if (data.reasoning) {
+        html += `<details><summary>💭 Размышления</summary><pre>${mdLite(data.reasoning)}</pre></details>`;
+      }
+      html += mdLite(data.content || '(пусто)');
+      if (data.timings) {
+        html += `<div class="meta">${data.timings.predicted_per_second?.toFixed(2)} ток/сек · ${data.timings.predicted_n} токенов</div>`;
+      }
+      html += `</div>`;
+      chat.innerHTML += html;
+    }
+  } catch(e) {
+    document.getElementById('loadingId')?.remove();
+    const el = document.getElementById(loadingId);
+    if (el) el.remove();
+    chat.innerHTML += `<div class="msg error">Сеть: ${e.message}</div>`;
+  }
+  sendBtn.disabled = false;
+  chat.scrollTop = chat.scrollHeight;
+  msgInput.focus();
+}
+msgInput.addEventListener('keypress', e => e.key === 'Enter' && !sendBtn.disabled && send());
+</script>
+</body>
+</html>
