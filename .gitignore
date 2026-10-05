@@ -4,6 +4,7 @@ data/
 models/
 loras/
 lora/datasets/manual/*.jsonl
+lora/datasets/meta/registry.jsonl
 lora/sources/synthetic/*.jsonl
 __pycache__/
 *.pyc
