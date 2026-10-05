@@ -92,8 +92,77 @@ services:
     mem_limit: 128M
     restart: unless-stopped
 
+  # ─── Мониторинг ──────────────────────────────────────────
+  nexus-prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: nexus-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    mem_limit: 512M
+    restart: unless-stopped
+
+  nexus-grafana:
+    image: grafana/grafana:11.3.0
+    container_name: nexus-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin_change_me}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://31.128.38.96:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    mem_limit: 256M
+    restart: unless-stopped
+
+  nexus-node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: nexus-node-exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host:ro,rslave
+    mem_limit: 64M
+    restart: unless-stopped
+
+  nexus-postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: nexus-postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://nexusai:${POSTGRES_PASSWORD}@nexus-postgres:5432/nexusai?sslmode=disable
+    depends_on:
+      - postgres
+    mem_limit: 64M
+    restart: unless-stopped
+
+  nexus-nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    container_name: nexus-nginx-exporter
+    command:
+      - '--nginx.scrape-uri=http://nexus-nginx:80/nginx_status'
+    depends_on:
+      - nginx
+    mem_limit: 32M
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   qdrant_data:
   embeddings_cache:
   documents_data:
+  prometheus_data:
+  grafana_data:

@@ -18,9 +18,10 @@ RUN pip install --no-cache-dir \
     xlrd \
     odfpy \
     pandas \
-    pytest
+    pytest \
+    prometheus-client
 COPY main.py auth.py middleware.py experts_service.py orchestrator.py \
-     extractors.py chunker.py embeddings_client.py qdrant_service.py rag.py rate_limit.py ./
+     extractors.py chunker.py embeddings_client.py qdrant_service.py rag.py rate_limit.py metrics.py ./
 COPY routers/ ./routers/
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
