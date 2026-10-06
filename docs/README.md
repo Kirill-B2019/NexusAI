@@ -2,37 +2,77 @@
 
 Индекс документации проекта.
 
-## Документы
+## Быстрый старт
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — архитектура, C4, потоки данных
+- [QUICKSTART.md](QUICKSTART.md) — установка за 30 минут
+- [ARCHITECTURE.md](ARCHITECTURE.md) — обзор архитектуры, C4, потоки данных
+- [INTEGRATIONS.md](INTEGRATIONS.md) — подключение Laravel, Nest.js, Python, PHP, Go
+
+## Справочники
+
+- [API_REFERENCE.md](API_REFERENCE.md) — полный справочник API (18 разделов)
+- [API.md](API.md) — краткий справочник (для быстрого ознакомления)
+- [DATA_MODEL.md](DATA_MODEL.md) — модель данных PostgreSQL
+- [EXPERTS.md](EXPERTS.md) — 6 экспертов, добавление новых
 - [RAG.md](RAG.md) — работа с документами, чанкинг, эмбеддинги
-- API.md — справочник эндпоинтов (будет на Этапе 5)
-- EXPERTS.md — эксперты и промпты (будет на Этапе 5)
-- DEPLOYMENT.md — развёртывание (Этап 9)
-- OPERATIONS.md — бэкапы, восстановление (Этап 7)
-- MONITORING.md — метрики, алерты (Этап 10)
-- INTEGRATIONS.md — подключение Laravel/Nest.js (Этап 7)
-- UI.md — панель управления (Этап 7)
+- [SSE.md](SSE.md) — Server-Sent Events
 
-## Обзор
+## Руководства
+
+- [UI.md](UI.md) — карта экранов, компоненты для Nest.js
+- [OPERATIONS.md](OPERATIONS.md) — регламент эксплуатации
+- [MONITORING.md](MONITORING.md) — Prometheus, Grafana
+- [TESTING.md](TESTING.md) — smoke, regression, pytest
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — частые проблемы
+
+## Метадокументы
+
+- [CHANGELOG.md](CHANGELOG.md) — история изменений
+- [decision-log.md](decision-log.md) — ADR (13 решений)
+- [STAGES.md](STAGES.md) — трекер этапов разработки
+- [HANDOFF.md](HANDOFF.md) — передача контекста
+
+## Диаграммы
+
+Mermaid-схемы в [diagrams/](diagrams/):
+
+- [diagrams/README.md](diagrams/README.md) — индекс
+- [diagrams/c4-containers.md](diagrams/c4-containers.md) — контейнеры
+- [diagrams/sequences.md](diagrams/sequences.md) — sequence-диаграммы
+- [diagrams/er-diagram.md](diagrams/er-diagram.md) — ER-диаграмма БД
+- [diagrams/deployment.md](diagrams/deployment.md) — развёртывание
+
+## Примеры кода
+
+Готовые клиенты в [examples/](examples/):
+
+- [examples/curl/README.md](examples/curl/README.md) — все запросы через curl
+- [examples/python/client.py](examples/python/client.py) — Python-клиент
+- [examples/php/NexusAiClient.php](examples/php/NexusAiClient.php) — Laravel/PHP
+- [examples/typescript/](examples/typescript/) — Nest.js (service + controller + module)
+- [examples/go/client.go](examples/go/client.go) — Go-клиент
+- [examples/postman/nexus-ai.json](examples/postman/nexus-ai.json) — Postman-коллекция
+
+## Обзор проекта
 
 NEXUS AI — внутренняя AI-платформа с 6 экспертами и оркестратором.
-API-first, развёрнута на одном сервере, готова к разделению на 2 сервера.
+Развёрнута на одном сервере, API-first, готова к разделению на 2 сервера.
 
 ## Стек
 
-- Модель: Qwen3-4B Q4_K_M (llama.cpp, CPU)
-- API: FastAPI + Uvicorn
-- БД: PostgreSQL 17
-- Векторы: Qdrant (коллекция project_documents, 384 dims, Cosine)
-- Эмбеддинги: intfloat/multilingual-e5-small
-- Прокси: Nginx
+- **Модель:** Qwen3-4B Q4_K_M (llama.cpp, CPU, 7 threads, 2 слота, ctx 4096/слот)
+- **API:** FastAPI + Uvicorn
+- **БД:** PostgreSQL 17 (15 таблиц)
+- **Векторы:** Qdrant (384 dim, Cosine)
+- **Эмбеддинги:** intfloat/multilingual-e5-small
+- **Прокси:** Nginx
+- **Мониторинг:** Prometheus + Grafana
 
 ## Аутентификация
 
-- Admin API-ключ — в `.env`, полный доступ
-- Project API-ключ — создаётся через API, привязан к проекту
-- Заголовки: `X-API-Key: <key>` или `Authorization: Bearer <key>`
+- **Admin API-ключ** — в `.env`, полный доступ
+- **Project API-ключ** — создаётся через API, привязан к проекту
+- **Заголовки:** `X-API-Key: <key>` или `Authorization: Bearer <key>`
 
 ---
 

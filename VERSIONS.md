@@ -1,6 +1,6 @@
 # NEXUS AI — зафиксированные версии
 
-Дата снятия: 2026-10-06T09:53:40+00:00
+Дата снятия: 2026-10-06T14:09:07+00:00
 
 ## Система
 - Ubuntu: Ubuntu 26.04.1 LTS
@@ -15,17 +15,17 @@
 
 ## Контейнеры
 SERVICE                   IMAGE                                           STATUS
-api                       nexus-ai-api                                    Up 11 minutes
-embeddings                nexus-ai-embeddings                             Up 3 hours
-nexus-grafana             grafana/grafana:11.3.0                          Up 3 hours
-model-server              ghcr.io/ggml-org/llama.cpp:server               Up 15 minutes (healthy)
-nginx                     nginx:alpine                                    Up 3 hours
-nexus-nginx-exporter      nginx/nginx-prometheus-exporter:1.3.0           Up 3 hours
-nexus-node-exporter       prom/node-exporter:v1.8.2                       Up 3 hours
-postgres                  postgres:17                                     Up 3 hours
-nexus-postgres-exporter   prometheuscommunity/postgres-exporter:v0.16.0   Up 3 hours
-nexus-prometheus          prom/prometheus:v2.55.0                         Up 3 hours
-qdrant                    qdrant/qdrant:latest                            Up 3 hours
+api                       nexus-ai-api                                    Up 4 hours
+embeddings                nexus-ai-embeddings                             Up 7 hours
+nexus-grafana             grafana/grafana:11.3.0                          Up 7 hours
+model-server              ghcr.io/ggml-org/llama.cpp:server               Up 5 hours (healthy)
+nginx                     nginx:alpine                                    Up 7 hours
+nexus-nginx-exporter      nginx/nginx-prometheus-exporter:1.3.0           Up 7 hours
+nexus-node-exporter       prom/node-exporter:v1.8.2                       Up 7 hours
+postgres                  postgres:17                                     Up 7 hours
+nexus-postgres-exporter   prometheuscommunity/postgres-exporter:v0.16.0   Up 7 hours
+nexus-prometheus          prom/prometheus:v2.55.0                         Up 7 hours
+qdrant                    qdrant/qdrant:latest                            Up 7 hours
 
 ## Модель
 -rw-r--r-- 1 root root 2.4G Oct  4 10:41 /opt/nexus-ai/models/Qwen3-4B-Q4_K_M.gguf
@@ -59,7 +59,3 @@ e946b63cd57cd29d4a36e4760e769ecd6779d5d1b314ffa196912fff1a8e6a99  api/main.py
 ## Backup
 - Расположение: /opt/nexus-ai/backups/
 - Логи: backup.log, healthcheck.log
-
----
-
-| KB @CerberRus00 - Nexus Invest Team

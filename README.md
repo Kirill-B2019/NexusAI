@@ -1,93 +1,84 @@
 # NEXUS AI
 
-Полная документация: [docs/README.md](docs/README.md)
+Внутренняя AI-платформа с 6 экспертами и оркестратором.
+API-first, развёрнута на одном сервере, готова к разделению на 2 сервера.
 
-Внутренняя AI-платформа с 6 экспертами и оркестратором. API-first: фронт (Laravel + Nest.js) и другие системы подключаются по HTTP.
+**Полная документация:** [docs/README.md](docs/README.md)
 
-## Архитектура
+## Что это
 
-- **Модель:** Qwen3-4B Q4_K_M (llama.cpp, CPU, 2 слота)
-- **API:** FastAPI + Uvicorn
-- **БД:** PostgreSQL 17
-- **Векторы:** Qdrant
-- **Эмбеддинги:** multilingual-e5-small
-- **Прокси:** Nginx
-- **Аутентификация:** API-ключи (admin + project)
+- **6 экспертов:** системный архитектор, инженер-программист, финтех, цифровое право, проектный скоринг, инвестиционный советник
+- **Оркестратор:** auto / manual / single режимы, параллельное исполнение
+- **RAG:** работа с документами PDF/DOCX/XLSX/MD, изоляция проектов
+- **SSE-стрим:** потоковая выдача ответов
+- **Мониторинг:** Prometheus + Grafana + 2 дашборда
+- **34 API-эндпоинта:** аутентификация по API-ключам, rate limiting, аудит
 
-## Эксперты (6)
+## Стек
 
-| Ключ | Роль |
-|------|------|
-| system_architect | Системный архитектор |
-| software_engineer | Инженер-программист |
-| fintech | Финтех-эксперт |
-| digital_law | Эксперт по цифровому праву |
-| project_scoring | Эксперт по проектному скорингу |
-| investment_advisor | Инвестиционный советник |
+| Компонент | Технология |
+|-----------|-----------|
+| Модель | Qwen3-4B Q4_K_M (llama.cpp, CPU) |
+| API | FastAPI + Uvicorn |
+| БД | PostgreSQL 17 |
+| Векторы | Qdrant |
+| Эмбеддинги | multilingual-e5-small |
+| Прокси | Nginx |
+| Мониторинг | Prometheus + Grafana |
 
-## API (v1)
+## Требования
 
-### Публичные
-- `GET /api/health`
-- `GET /api/version`
+- Ubuntu 24.04+ LTS
+- 4+ ядра CPU (рекомендуется 8)
+- 8+ ГБ RAM (рекомендуется 16)
+- 80+ ГБ NVMe
+- GPU не требуется
 
-### С API-ключом
-- `GET /api/v1/experts` — список активных экспертов
-- `POST /api/v1/chat` — чат (single / auto / manual)
-- `POST /api/v1/route` — предпросмотр выбора экспертов
-- `POST /api/v1/projects/{id}/documents` — загрузка документов
-- `GET /api/v1/conversations/{id}/messages` — история диалога
-- `POST /api/v1/decisions` — решения
-- `POST /api/v1/tasks` — задачи
+## Установка
 
-### Admin-only
-- `POST /api/v1/experts` — создать эксперта
-- `PATCH /api/v1/experts/{key}` — изменить
-- `POST /api/v1/experts/{key}/enable|disable`
-- `POST /api/v1/projects` — создать проект
-- `POST /api/v1/projects/{id}/keys` — выдать API-ключ
-- `GET /api/v1/audit` — журнал аудита
+См. [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
-## Аутентификация
+## API
 
-**Admin-ключ** — в `.env` (`ADMIN_API_KEY`):
-    curl -H "X-API-Key: $ADMIN_KEY" https://api.../v1/experts
-
-**Project-ключ** — выдаётся через `/v1/projects/{id}/keys`, привязан к проекту.
-
-**Заголовки:**
-- `Authorization: Bearer <key>` или
-- `X-API-Key: <key>`
+- Полный справочник: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+- Краткий: [docs/API.md](docs/API.md)
+- Swagger UI: http://<IP>/api/docs (за admin-ключом)
+- Postman-коллекция: [docs/examples/postman/nexus-ai.json](docs/examples/postman/nexus-ai.json)
 
 ## Управление
 
     sudo systemctl status nexus-ai
-    docker compose -f /opt/nexus-ai/docker-compose.yml ps
-    docker compose -f /opt/nexus-ai/docker-compose.yml logs -f api
-    sudo systemctl restart nexus-ai
+    cd /opt/nexus-ai && sudo docker compose ps
+    cd /opt/nexus-ai && sudo docker compose logs --tail=100 api
 
-## Бэкапы
+## Мониторинг
 
-- PostgreSQL: ежедневно 03:00
-- Qdrant: каждое воскресенье 03:30
-- Конфигурация: ежедневно 04:00
-- Healthcheck: каждые 15 минут
+- Grafana: http://<IP>:3000 (admin / пароль из .env)
+- Дашборды: NEXUS AI — Overview, NEXUS AI — API
 
-Каталог: `/opt/nexus-ai/backups/`
+## Тесты
 
-## Файлы
+    /opt/nexus-ai/scripts/smoke.sh
+    /opt/nexus-ai/scripts/regression.sh
 
-- `/opt/nexus-ai/api/main.py` — точка входа
-- `/opt/nexus-ai/api/auth.py` — проверка ключей
-- `/opt/nexus-ai/api/middleware.py` — Request-ID, audit
-- `/opt/nexus-ai/api/experts_service.py` — работа с экспертами
-- `/opt/nexus-ai/api/orchestrator.py` — роутер + executor
-- `/opt/nexus-ai/api/routers/` — эндпоинты по доменам
-- `/opt/nexus-ai/scripts/` — бэкапы, healthcheck, versions
+## Документация
 
-## Версии
+| Раздел | Файл |
+|--------|------|
+| Установка | docs/QUICKSTART.md |
+| Архитектура | docs/ARCHITECTURE.md |
+| API Reference | docs/API_REFERENCE.md |
+| Интеграции | docs/INTEGRATIONS.md |
+| RAG | docs/RAG.md |
+| Мониторинг | docs/MONITORING.md |
+| Эксплуатация | docs/OPERATIONS.md |
+| Примеры кода | docs/examples/ |
 
-См. `VERSIONS.md`.
+Полный индекс: [docs/README.md](docs/README.md).
+
+## История версий
+
+См. [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 ---
 

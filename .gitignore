@@ -8,3 +8,9 @@ lora/datasets/meta/registry.jsonl
 lora/sources/synthetic/*.jsonl
 __pycache__/
 *.pyc
+
+# Бэкапы .env (никогда не коммитить)
+.env.bak*
+.env.*.bak
+.env.current.backup
+*.env.bak

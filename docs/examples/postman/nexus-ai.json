@@ -1,0 +1,366 @@
+{
+  "info": {
+    "name": "NEXUS AI",
+    "description": "Полная коллекция запросов к API NEXUS AI. Импортируется в Postman одним файлом.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://31.128.38.96/api" },
+    { "key": "admin_key", "value": "ВАШ_ADMIN_API_KEY" },
+    { "key": "project_key", "value": "ВАШ_PROJECT_KEY" },
+    { "key": "project_id", "value": "UUID_ПРОЕКТА" },
+    { "key": "doc_id", "value": "UUID_ДОКУМЕНТА" },
+    { "key": "conv_id", "value": "UUID_ДИАЛОГА" }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "value", "value": "{{admin_key}}", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" },
+      { "key": "key", "value": "X-API-Key", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] },
+            "description": "Публичный. Проверка живости API."
+          }
+        },
+        {
+          "name": "Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/version", "host": ["{{base_url}}"], "path": ["version"] }
+          }
+        },
+        {
+          "name": "Metrics (Prometheus)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/metrics", "host": ["{{base_url}}"], "path": ["metrics"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Experts",
+      "item": [
+        {
+          "name": "Список активных",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/experts", "host": ["{{base_url}}"], "path": ["v1", "experts"] }
+          }
+        },
+        {
+          "name": "Все (включая отключённых)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/experts/all", "host": ["{{base_url}}"], "path": ["v1", "experts", "all"] }
+          }
+        },
+        {
+          "name": "Детали эксперта",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/experts/system_architect", "host": ["{{base_url}}"], "path": ["v1", "experts", "system_architect"] }
+          }
+        },
+        {
+          "name": "Отключить эксперта",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/experts/digital_law/disable", "host": ["{{base_url}}"], "path": ["v1", "experts", "digital_law", "disable"] }
+          }
+        },
+        {
+          "name": "Включить эксперта",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/experts/digital_law/enable", "host": ["{{base_url}}"], "path": ["v1", "experts", "digital_law", "enable"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Список проектов",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/projects", "host": ["{{base_url}}"], "path": ["v1", "projects"] }
+          }
+        },
+        {
+          "name": "Создать проект",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Мой проект\",\n  \"description\": \"Описание\",\n  \"external_id\": \"laravel-001\",\n  \"metadata\": {}\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/projects", "host": ["{{base_url}}"], "path": ["v1", "projects"] }
+          }
+        },
+        {
+          "name": "Ключи проекта",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/keys", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "keys"] }
+          }
+        },
+        {
+          "name": "Создать ключ",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laravel production\",\n  \"allowed_experts\": [\"system_architect\", \"fintech\"],\n  \"rate_limit_per_min\": 120\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/keys", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "keys"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Список документов",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/documents", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "documents"] }
+          }
+        },
+        {
+          "name": "Загрузить документ",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/documents", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "documents"] }
+          }
+        },
+        {
+          "name": "Статус документа",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/documents/{{doc_id}}/status", "host": ["{{base_url}}"], "path": ["v1", "documents", "{{doc_id}}", "status"] }
+          }
+        },
+        {
+          "name": "Вопрос по документу",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"О чём этот документ?\",\n  \"expert\": \"system_architect\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/documents/{{doc_id}}/ask", "host": ["{{base_url}}"], "path": ["v1", "documents", "{{doc_id}}", "ask"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Чат — single",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Что такое API Gateway? Кратко.\",\n  \"expert\": \"system_architect\",\n  \"orchestrate\": false,\n  \"use_rag\": false\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/chat", "host": ["{{base_url}}"], "path": ["v1", "chat"] }
+          }
+        },
+        {
+          "name": "Чат — оркестрация",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Оцени проект платёжной системы\",\n  \"experts\": [\"fintech\", \"digital_law\", \"project_scoring\"],\n  \"use_rag\": false\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/chat", "host": ["{{base_url}}"], "path": ["v1", "chat"] }
+          }
+        },
+        {
+          "name": "Чат — с RAG",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Какой бюджет в документе?\",\n  \"expert\": \"project_scoring\",\n  \"orchestrate\": false,\n  \"project_id\": \"{{project_id}}\",\n  \"use_rag\": true,\n  \"rag_top_k\": 4\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/chat", "host": ["{{base_url}}"], "path": ["v1", "chat"] }
+          }
+        },
+        {
+          "name": "Route preview",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Оцени проект платёжной системы\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/chat/route", "host": ["{{base_url}}"], "path": ["v1", "chat", "route"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Список диалогов",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/conversations", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "conversations"] }
+          }
+        },
+        {
+          "name": "Создать диалог",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Обсуждение архитектуры\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/conversations", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "conversations"] }
+          }
+        },
+        {
+          "name": "История сообщений",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/conversations/{{conv_id}}/messages?limit=50", "host": ["{{base_url}}"], "path": ["v1", "conversations", "{{conv_id}}", "messages"], "query": [{ "key": "limit", "value": "50" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Decisions",
+      "item": [
+        {
+          "name": "Список решений",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/decisions", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "decisions"] }
+          }
+        },
+        {
+          "name": "Создать решение",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Использовать модульный монолит\",\n  \"content\": \"Обоснование...\",\n  \"status\": \"active\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/decisions", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "decisions"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Список задач",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/tasks", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "tasks"] }
+          }
+        },
+        {
+          "name": "Создать задачу",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Написать API Gateway\",\n  \"priority\": \"high\",\n  \"assignee_expert\": \"software_engineer\",\n  \"due_date\": \"2026-12-01\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/v1/projects/{{project_id}}/tasks", "host": ["{{base_url}}"], "path": ["v1", "projects", "{{project_id}}", "tasks"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/admin/stats", "host": ["{{base_url}}"], "path": ["v1", "admin", "stats"] }
+          }
+        },
+        {
+          "name": "System health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/admin/system-health", "host": ["{{base_url}}"], "path": ["v1", "admin", "system-health"] }
+          }
+        },
+        {
+          "name": "Audit (последние 50)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/admin/audit?limit=50", "host": ["{{base_url}}"], "path": ["v1", "admin", "audit"], "query": [{ "key": "limit", "value": "50" }] }
+          }
+        },
+        {
+          "name": "Projects usage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/v1/admin/projects-usage", "host": ["{{base_url}}"], "path": ["v1", "admin", "projects-usage"] }
+          }
+        }
+      ]
+    }
+  ]
+}
