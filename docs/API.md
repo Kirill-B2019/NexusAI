@@ -275,3 +275,7 @@ In-memory счётчик по API-ключу (sliding window 60 сек).
 - /api/openapi.json — схема
 
 Требуется admin-ключ в X-API-Key.
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

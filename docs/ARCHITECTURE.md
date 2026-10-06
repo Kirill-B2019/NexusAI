@@ -190,6 +190,6 @@ API-first: фронт (Laravel + Nest.js) и сторонние системы �
 
 См. VERSIONS.md в корне.
 
+---
 
-
-
+| KB @CerberRus00 - Nexus Invest Team

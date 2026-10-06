@@ -33,3 +33,7 @@ API-first, развёрнута на одном сервере, готова к 
 - Admin API-ключ — в `.env`, полный доступ
 - Project API-ключ — создаётся через API, привязан к проекту
 - Заголовки: `X-API-Key: <key>` или `Authorization: Bearer <key>`
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

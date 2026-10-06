@@ -333,3 +333,7 @@
 
     # 5. RAM / диск
     free -h && df -h /
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

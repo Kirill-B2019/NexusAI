@@ -245,3 +245,7 @@
     # 1. ALTER USER nexusai WITH PASSWORD 'new_pass';
     # 2. Обновить .env
     # 3. Перезапустить API
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

@@ -700,3 +700,7 @@ Project-ключ создаётся через admin-эндпоинт:
 - **Rate limit headers:** X-RateLimit-Limit, X-RateLimit-Remaining в каждом ответе
 - **Request ID:** заголовок X-Request-ID в каждом ответе — для трассировки
 - **Аудит:** GET /v1/admin/audit (admin) — все действия с фильтрами
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

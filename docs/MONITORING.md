@@ -149,3 +149,7 @@ Targets:
 - Отдельный дашборд для PostgreSQL
 - Отдельный дашборд для Qdrant
 - Долгосрочное хранение метрик (Thanos или Victoria Metrics)
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

@@ -260,3 +260,7 @@
 - **Сервер:** root@31.128.38.96
 - **Часовой пояс:** UTC
 - **GitHub:** https://github.com/Kirill-B2019/NexusAI
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

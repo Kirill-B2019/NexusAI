@@ -59,3 +59,7 @@ e946b63cd57cd29d4a36e4760e769ecd6779d5d1b314ffa196912fff1a8e6a99  api/main.py
 ## Backup
 - Расположение: /opt/nexus-ai/backups/
 - Логи: backup.log, healthcheck.log
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

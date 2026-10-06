@@ -117,3 +117,7 @@ keywords используются роутером для автоматичес
 | project_scoring | investment_advisor | инвестиционная привлекательность |
 | project_scoring | fintech | финансовая модель проекта |
 | investment_advisor | digital_law | регулирование инвестиций |
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

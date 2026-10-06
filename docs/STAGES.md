@@ -59,3 +59,7 @@
 - Rate limiting: in-memory, 60/мин project, 600/мин admin
 - Мониторинг: Prometheus + Grafana
 - Деплой: Docker Compose + systemd
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

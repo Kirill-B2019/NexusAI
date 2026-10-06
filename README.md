@@ -88,3 +88,7 @@
 ## Версии
 
 См. `VERSIONS.md`.
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

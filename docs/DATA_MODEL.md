@@ -163,3 +163,7 @@
 - documents → document_chunks (CASCADE)
 - messages ← decisions.source_message_id, tasks.source_message_id
 - experts → expert_prompt_history (CASCADE)
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

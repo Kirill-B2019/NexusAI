@@ -173,3 +173,7 @@ POST /v1/documents/{id}/reindex:
 | api/rag.py                   | Оркестрация RAG: search → context    |
 | api/routers/documents.py     | API документов                       |
 | embeddings/main.py           | Эмбеддинг-сервис                     |
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

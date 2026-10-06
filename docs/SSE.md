@@ -222,3 +222,7 @@ N. done (финал)
 
 ### Аудит
 Каждый стрим-запрос пишется в audit_log с action = chat.stream.<mode>.
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team
