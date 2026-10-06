@@ -4,8 +4,8 @@ services:
     container_name: nexus-model
     command: >
       --model /models/Qwen3-4B-Q4_K_M.gguf
-      --threads 4
-      --ctx-size 4096
+      --threads 7
+      --ctx-size 8192
       --batch-size 512
       --parallel 2
       --cont-batching

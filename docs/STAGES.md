@@ -52,7 +52,7 @@
 
 ## Ключевые технические решения
 
-- Модель: Qwen3-4B Q4_K_M (llama.cpp, CPU, 2 слота, ctx 4096)
+- Модель: Qwen3-4B Q4_K_M (llama.cpp, CPU, 7 потоков, 2 слота, ctx 4096/слот, 9.3 t/s)
 - Векторная БД: Qdrant, коллекция `project_documents`, 384 dim, Cosine
 - Эмбеддинги: intfloat/multilingual-e5-small
 - Аутентификация: API-ключи (admin + project)
