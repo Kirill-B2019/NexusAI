@@ -543,3 +543,71 @@ UI не общается с NEXUS AI напрямую.
 ---
 
 | KB @CerberRus00 - Nexus Invest Team
+
+---
+
+## Прототип debug-админки (v1.0)
+
+**Ссылка:** http://31.128.38.96/debug/admin/index.html
+
+### Что умеет
+
+- **Аутентификация:** API-ключ (admin или project) хранится в localStorage
+- **8 разделов:** Dashboard, Experts, Projects, Documents, Chat, Metrics, Audit, Settings
+- **Dashboard:** 10 KPI-карточек + таблица 5 сервисов
+- **Experts:** список, создание, редактирование, включение/отключение, удаление
+- **Projects:** список, создание, удаление, **управление API-ключами** (модальное окно с plaintext-ключом)
+- **API Keys:** выбор экспертов чекбоксами, rate limit presets (30/60/120/300/600/Свой), срок действия (30/60/90 дней/постоянный/произвольный с календарём)
+- **Documents:** выбор проекта, загрузка файлов, автообновление статуса (polling 3 сек), переиндексация, удаление, «Спросить по документу»
+- **Chat:** 3 режима (auto/single/manual), RAG, thinking, **копирование ответов одной кнопкой**
+- **Metrics:** system-health, Prometheus targets, сырые метрики API, ссылки на Grafana
+- **Audit:** журнал с фильтрами (action, project_id, limit)
+
+### Технологии
+
+- **Vanilla JS** — без сборки, без npm, без зависимостей
+- **CSS-переменные** — фирменная палитра NEXUS/HEKCYC (neon green #c5f542 на тёмном)
+- **13 файлов:** 1 HTML + 1 CSS + 11 JS-модулей
+- **~2800 строк**
+
+### Расположение
+
+`nginx/debug/admin/`
+
+### Структура
+
+    admin/
+    ├── index.html          # SPA-оболочка
+    ├── css/
+    │   └── style.css       # Тема + компоненты
+    └── js/
+        ├── api.js          # Fetch-обёртка с авторизацией
+        ├── settings.js     # Настройки + Toast + Modal
+        ├── app.js          # Навигация SPA
+        ├── dashboard.js    # Stats + health
+        ├── experts.js      # CRUD экспертов
+        ├── projects.js     # CRUD проектов + API-ключи
+        ├── documents.js    # Документы + RAG + ask
+        ├── chat.js         # 3 режима + копирование
+        ├── metrics.js      # Метрики + Grafana
+        ├── audit.js        # Журнал аудита
+        └── init.js         # Bootstrap
+
+### Назначение
+
+**Прототип** для тестирования всех функций API без curl.  
+**Референс** для продакшн-админки на Laravel 12 (PhpStorm).
+
+### Отличия от продакшн-админки
+
+| Характеристика | Прототип (debug) | Продакшн (Laravel) |
+|---------------|------------------|-------------------|
+| Аутентификация | API-ключ в localStorage | Сессия Laravel + роли |
+| Сборка | Нет | Vite / Laravel Mix |
+| Стиль | Vanilla CSS | Blade / Tailwind |
+| Пользователи | Один ключ | Многопользовательский |
+| Доступ | /debug/admin/ | /admin/ |
+
+---
+
+| KB @CerberRus00 - Nexus Invest Team

@@ -23,6 +23,7 @@
 - **Rate limiting:** 60/мин (project), 600/мин (admin)
 - **Мониторинг:** Prometheus + Grafana + 2 дашборда (Overview + API), 5 targets up
 - **Smoke/regression/pytest:** 19/19, 3/3, 22/22
+- **Debug Admin UI:** http://31.128.38.96/debug/admin/index.html — прототип админки (Vanilla JS, 8 разделов, копирование ответов, управление ключами)
 
 ## Сервер
 

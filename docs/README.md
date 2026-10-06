@@ -42,6 +42,14 @@ Mermaid-схемы в [diagrams/](diagrams/):
 - [diagrams/er-diagram.md](diagrams/er-diagram.md) — ER-диаграмма БД
 - [diagrams/deployment.md](diagrams/deployment.md) — развёртывание
 
+## Debug Admin UI
+
+Прототип админки на Vanilla JS: http://31.128.38.96/debug/admin/index.html
+
+- Исходники: `nginx/debug/admin/`
+- 8 разделов: Dashboard, Experts, Projects, Documents, Chat, Metrics, Audit, Settings
+- Фирменная тёмная тема NEXUS/HEKCYC
+
 ## Примеры кода
 
 Готовые клиенты в [examples/](examples/):
