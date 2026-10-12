@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnforceIdleTimeout;
 use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\RequireRole;
 use Illuminate\Foundation\Application;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(fn (Request $request): string => route('home'));
         $middleware->alias([
+            'idle.timeout' => EnforceIdleTimeout::class,
             'password.change' => RequirePasswordChange::class,
             'role' => RequireRole::class,
         ]);

@@ -6,9 +6,7 @@ use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Session\ArraySessionHandler;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -67,48 +65,105 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_authenticated_session_expires_after_fifteen_minutes_of_inactivity(): void
+    public function test_session_idle_timeout_invalidates_auth_even_when_requests_keep_the_laravel_session_alive(): void
     {
         config([
             'session.driver' => 'array',
             'session.lifetime' => 15,
+            'session.idle_timeout' => 15,
         ]);
         $this->app['session']->forgetDrivers();
-        $this->assertInstanceOf(ArraySessionHandler::class, $this->app['session']->driver()->getHandler());
 
         $user = User::factory()->create([
             'email' => 'idle@example.com',
             'password' => Hash::make('correct-horse-battery'),
         ]);
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'correct-horse-battery',
-            'remember' => '1',
-        ])->assertRedirect('/dashboard');
+        $start = Carbon::now();
+        try {
+            Carbon::setTestNow($start);
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'correct-horse-battery',
+            ])->assertRedirect('/dashboard');
+
+            $lastActivity = $start->timestamp;
+            $this->get('/dashboard')
+                ->assertOk()
+                ->assertSeeInOrder(['name="session-idle-timeout-seconds"', 'content="900"'], false)
+                ->assertSee('name="session-expire-url"', false)
+                ->assertSessionHas('nexus.last_user_activity_at', $lastActivity);
+
+            Carbon::setTestNow($start->copy()->addMinutes(14));
+            $this->get('/dashboard')
+                ->assertOk()
+                ->assertSessionHas('nexus.last_user_activity_at', $lastActivity);
+
+            Carbon::setTestNow($start->copy()->addMinutes(15));
+            $this->get('/dashboard')->assertRedirect(route('home'));
+            $this->assertGuest();
+            $this->get('/')->assertRedirect(route('login'));
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_real_activity_endpoint_renews_idle_deadline_but_reaches_expiry_at_fifteen_minutes(): void
+    {
+        config([
+            'session.driver' => 'array',
+            'session.lifetime' => 15,
+            'session.idle_timeout' => 15,
+        ]);
+        $this->app['session']->forgetDrivers();
+
+        $user = User::factory()->create([
+            'email' => 'active@example.com',
+            'password' => Hash::make('correct-horse-battery'),
+        ]);
 
         $start = Carbon::now();
-        $handler = $this->app['session']->driver()->getHandler();
-        Carbon::setTestNow($start->copy()->addMinutes(14));
-        $this->get('/dashboard')->assertOk();
+        try {
+            Carbon::setTestNow($start);
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'correct-horse-battery',
+            ])->assertRedirect('/dashboard');
+            $this->get('/dashboard')->assertOk();
 
-        Carbon::setTestNow($start->copy()->addMinutes(28));
-        $this->get('/dashboard')->assertOk();
+            $activityAt = $start->copy()->addMinutes(14);
+            Carbon::setTestNow($activityAt);
+            $this->post(route('session.activity.update'))
+                ->assertNoContent()
+                ->assertSessionHas('nexus.last_user_activity_at', $activityAt->timestamp);
 
-        $sessionId = $this->app['session.store']->getId();
-        $this->assertNotSame('', $handler->read($sessionId));
+            Carbon::setTestNow($activityAt->copy()->addMinutes(14)->addSeconds(59));
+            $this->get('/dashboard')->assertOk();
 
-        Carbon::setTestNow($start->copy()->addMinutes(44));
-        $this->assertSame('', $handler->read($sessionId));
-        $handler->destroy($sessionId);
-        $this->flushSession();
-        Auth::forgetGuards();
+            Carbon::setTestNow($activityAt->copy()->addMinutes(15));
+            $this->get('/dashboard')->assertRedirect(route('home'));
+            $this->assertGuest();
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_logout_endpoint_invalidates_the_session_and_redirects_to_home(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->withSession(['nexus.last_user_activity_at' => now()->timestamp])
+            ->post(route('session.expire'))
+            ->assertRedirect(route('home'));
+
         $this->assertGuest();
+        $this->get('/')->assertRedirect(route('login'));
+    }
 
-        $this->get('/dashboard')->assertRedirect(route('home'));
-
-        $this->assertGuest();
-        Carbon::setTestNow();
+    public function test_guests_cannot_update_activity_or_expire_a_session(): void
+    {
+        $this->post(route('session.activity.update'))->assertRedirect(route('home'));
+        $this->post(route('session.expire'))->assertRedirect(route('home'));
     }
 
     public function test_invalid_credentials_do_not_authenticate(): void

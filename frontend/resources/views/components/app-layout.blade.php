@@ -6,6 +6,27 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#111411">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta
+            name="session-idle-timeout-seconds"
+            content="{{ (int) config('session.idle_timeout', 15) * 60 }}"
+        >
+        <meta
+            name="session-idle-remaining-seconds"
+            content="{{ request()->attributes->get('idle_timeout_remaining_seconds', (int) config('session.idle_timeout', 15) * 60) }}"
+        >
+        <meta
+            name="session-idle-last-activity"
+            content="{{ request()->attributes->get('idle_timeout_last_activity_at', now()->timestamp) }}"
+        >
+        <meta
+            name="session-idle-server-now"
+            content="{{ request()->attributes->get('idle_timeout_server_now', now()->timestamp) }}"
+        >
+        <meta name="session-activity-url" content="{{ route('session.activity.update') }}">
+        <meta name="session-expire-url" content="{{ route('session.expire') }}">
+        <meta name="session-home-url" content="{{ route('home') }}">
+        <meta name="session-user-id" content="{{ auth()->id() }}">
         <title>{{ $title }} · NEXUS AI</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
