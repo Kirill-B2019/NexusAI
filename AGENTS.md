@@ -9,6 +9,8 @@
 - Never expose NEXUS AI API keys or other secrets to the browser.
 - Proxy SSE streams without buffering and configure suitable upstream, server, and proxy timeouts for long-running responses.
 - Verify API contracts against the actual FastAPI routers before implementing integrations; written documentation may be out of date.
+- Follow the shared UI Kit, Laravel code-organization, accessibility, and testing standards in `docs/UI.md`; reuse kit components and extend them instead of creating one-off UI patterns.
+- Preserve local `.env` files and their secrets; change them only when required for the requested behavior, never commit them.
 
 ## Implementation and learning
 

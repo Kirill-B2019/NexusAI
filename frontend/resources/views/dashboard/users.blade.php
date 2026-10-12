@@ -112,37 +112,4 @@
         </section>
     @endif
 
-    <section class="panel admin-create-panel">
-        <div class="panel-heading">
-            <div><span class="eyebrow">УПРАВЛЕНИЕ ДОСТУПОМ</span><h2>Добавить пользователя</h2></div>
-        </div>
-        <form class="admin-create-form" method="POST" action="{{ route('admin.users.store') }}">
-            @csrf
-            <div class="admin-create-grid">
-                <div class="field">
-                    <label for="name">Имя</label>
-                    <input id="name" name="name" value="{{ old('name') }}" autocomplete="name" required>
-                    @error('name') <p class="field-error">{{ $message }}</p> @enderror
-                </div>
-                <div class="field">
-                    <label for="email">Электронная почта</label>
-                    <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required>
-                    @error('email') <p class="field-error">{{ $message }}</p> @enderror
-                </div>
-                <div class="field">
-                    <label for="role">Роль</label>
-                    <select id="role" name="role" required>
-                        @foreach (\App\Enums\UserRole::cases() as $role)
-                            <option value="{{ $role->value }}" @selected(old('role', \App\Enums\UserRole::User->value) === $role->value)>{{ $role->label() }}</option>
-                        @endforeach
-                    </select>
-                    @error('role') <p class="field-error">{{ $message }}</p> @enderror
-                </div>
-            </div>
-            <div class="admin-create-actions">
-                <p>Система создаст временный пароль; при первом входе пользователь обязан его сменить.</p>
-                <button class="button button-primary" type="submit">Создать учётную запись</button>
-            </div>
-        </form>
-    </section>
 </x-app-layout>

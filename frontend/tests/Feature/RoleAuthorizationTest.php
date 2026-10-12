@@ -22,6 +22,7 @@ class RoleAuthorizationTest extends TestCase
             ->assertSee('Участники рабочей области')
             ->assertSee('Добавить пользователя')
             ->assertSee('class="modal-dialog"', false)
+            ->assertDontSee('admin-create-panel', false)
             ->assertSee('name="role"', false)
             ->assertSee('Только чтение')
             ->assertSee($admin->email);

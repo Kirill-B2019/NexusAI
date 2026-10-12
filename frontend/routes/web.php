@@ -9,7 +9,7 @@ Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
-});
+})->name('home');
 
 Route::middleware(['auth', 'password.change'])->group(function () {
     Route::view('/dashboard', 'dashboard.index')->name('dashboard');

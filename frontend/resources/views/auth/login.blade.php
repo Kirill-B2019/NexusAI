@@ -15,10 +15,6 @@
             <input id="password" name="password" type="password" autocomplete="current-password" required>
             @error('password') <p class="field-error">{{ $message }}</p> @enderror
         </div>
-        <label class="check-row">
-            <input type="checkbox" name="remember" value="1">
-            <span>Оставаться в системе</span>
-        </label>
         <button class="button button-primary button-wide" type="submit">
             Войти <span aria-hidden="true">→</span>
         </button>

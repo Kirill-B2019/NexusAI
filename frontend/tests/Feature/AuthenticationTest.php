@@ -6,6 +6,9 @@ use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Session\ArraySessionHandler;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -15,10 +18,10 @@ class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_to_the_login_screen(): void
+    public function test_guest_is_redirected_to_home_and_can_open_the_login_screen(): void
     {
         $this->get('/dashboard')
-            ->assertRedirect('/login');
+            ->assertRedirect(route('home'));
 
         $this->get('/login')
             ->assertOk()
@@ -62,6 +65,50 @@ class AuthenticationTest extends TestCase
         $this->post('/logout')->assertRedirect('/login');
 
         $this->assertGuest();
+    }
+
+    public function test_authenticated_session_expires_after_fifteen_minutes_of_inactivity(): void
+    {
+        config([
+            'session.driver' => 'array',
+            'session.lifetime' => 15,
+        ]);
+        $this->app['session']->forgetDrivers();
+        $this->assertInstanceOf(ArraySessionHandler::class, $this->app['session']->driver()->getHandler());
+
+        $user = User::factory()->create([
+            'email' => 'idle@example.com',
+            'password' => Hash::make('correct-horse-battery'),
+        ]);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'correct-horse-battery',
+            'remember' => '1',
+        ])->assertRedirect('/dashboard');
+
+        $start = Carbon::now();
+        $handler = $this->app['session']->driver()->getHandler();
+        Carbon::setTestNow($start->copy()->addMinutes(14));
+        $this->get('/dashboard')->assertOk();
+
+        Carbon::setTestNow($start->copy()->addMinutes(28));
+        $this->get('/dashboard')->assertOk();
+
+        $sessionId = $this->app['session.store']->getId();
+        $this->assertNotSame('', $handler->read($sessionId));
+
+        Carbon::setTestNow($start->copy()->addMinutes(44));
+        $this->assertSame('', $handler->read($sessionId));
+        $handler->destroy($sessionId);
+        $this->flushSession();
+        Auth::forgetGuards();
+        $this->assertGuest();
+
+        $this->get('/dashboard')->assertRedirect(route('home'));
+
+        $this->assertGuest();
+        Carbon::setTestNow();
     }
 
     public function test_invalid_credentials_do_not_authenticate(): void
