@@ -19,7 +19,7 @@
 
 ## Руководства
 
-- [UI.md](UI.md) — карта экранов, компоненты для Nest.js
+- [UI.md](UI.md) — целевая карта экранов и правила интерфейса на Laravel 12
 - [OPERATIONS.md](OPERATIONS.md) — регламент эксплуатации
 - [MONITORING.md](MONITORING.md) — Prometheus, Grafana
 - [TESTING.md](TESTING.md) — smoke, regression, pytest

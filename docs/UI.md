@@ -1,13 +1,20 @@
 # NEXUS AI — UI / Панель управления
 
-Руководство для команды, разрабатывающей интерфейс NEXUS AI
-(Laravel + Livewire / Nest.js + React / Vue).
+Целевое руководство для пользовательского интерфейса NEXUS AI на Laravel 12,
+Blade, Livewire и Alpine.js. Laravel-приложение пока не создано.
 
 ## Философия
 
-NEXUS AI — API-first. Backend не навязывает UI.
-Всё, что может понадобиться интерфейсу, доступно через API.
-NEXUS AI не знает о пользователях и ролях — это ответственность Laravel.
+NEXUS AI остаётся отдельным API-first FastAPI-сервисом и не навязывает UI.
+Пользователи, сессии, роли и авторизация — ответственность Laravel.
+Изменения Laravel ограничиваются интеграциями, нужными интерфейсу; не переносите
+в него логику и ответственность NEXUS AI.
+
+Не используйте React, Vue или отдельную SPA без явного решения пользователя.
+TypeScript допустим только для изолированной браузерной логики SSE-чата на
+`fetch` и `ReadableStream`. Реализуйте интерфейс небольшими вертикальными шагами,
+следуя Laravel-паттернам; объясняйте важные решения и при необходимости кратко
+объясняйте изучаемые концепции.
 
 ## Роли и доступ
 
@@ -17,7 +24,7 @@ NEXUS AI не знает о пользователях и ролях — это 
 - viewer — только чтение
 
 Laravel → NEXUS AI проксирует запросы с admin или project API-ключом.
-UI никогда не видит API-ключ NEXUS AI напрямую.
+UI никогда не получает API-ключ NEXUS AI или другие секреты.
 
 ## Карта экранов
 
@@ -206,11 +213,16 @@ UI никогда не видит API-ключ NEXUS AI напрямую.
 
 **Стрим:**
 
-Использовать SSE через fetch + ReadableStream:
+Для браузерного SSE-чата используйте изолированную логику на TypeScript с
+`fetch` + `ReadableStream`. Запрос идёт только к Laravel-прокси; CSRF-токен
+передаётся по правилам Laravel, API-ключа NEXUS AI в браузере нет:
 
-    const response = await fetch('/api/v1/chat/stream', {
+    const response = await fetch('/nexus-proxy/chat/stream', {
       method: 'POST',
-      headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+      headers: {
+        'X-CSRF-TOKEN': csrfToken,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ message, expert, project_id })
     });
 
@@ -357,6 +369,12 @@ Drag & drop → PATCH /v1/tasks/{id} {status: "..."}
 ## Проксирование через Laravel
 
 UI не общается с NEXUS AI напрямую.
+До реализации сверяйте используемые endpoint'ы, параметры и ответы с фактическими
+FastAPI-роутерами: документация может расходиться с кодом. Laravel хранит ключи
+только на сервере, применяет сессионную авторизацию и проксирует SSE без
+буферизации. Настройте подходящие connect/read/upstream и reverse-proxy таймауты
+для долгих ответов, отключите буферизацию (включая `X-Accel-Buffering: no`) и
+передавайте события клиенту по мере получения.
 
 **Laravel роуты:**
 
@@ -410,111 +428,13 @@ UI не общается с NEXUS AI напрямую.
 
 ---
 
-## Примеры компонентов
+## Реализация интерфейса
 
-### ExpertSelector (React)
-
-    function ExpertSelector({ experts, value, onChange, allowAuto = true }) {
-      return (
-        <div className="expert-selector">
-          {allowAuto && (
-            <label>
-              <input
-                type="checkbox"
-                checked={value === null}
-                onChange={() => onChange(null)}
-              />
-              🤖 Авто-выбор
-            </label>
-          )}
-          {experts.map(e => (
-            <label key={e.key} style={{ color: e.color }}>
-              <input
-                type="checkbox"
-                checked={Array.isArray(value) && value.includes(e.key)}
-                onChange={(ev) => {
-                  const set = new Set(Array.isArray(value) ? value : []);
-                  ev.target.checked ? set.add(e.key) : set.delete(e.key);
-                  onChange(Array.from(set));
-                }}
-              />
-              {e.icon} {e.name}
-            </label>
-          ))}
-        </div>
-      );
-    }
-
-### MessageList (React)
-
-    function MessageList({ messages }) {
-      return (
-        <div className="message-list">
-          {messages.map(m => (
-            <div key={m.id} className={`message message-${m.role}`}>
-              {m.role === 'assistant' && m.experts_used && (
-                <div className="experts-tags">
-                  {m.experts_used.map(k => (
-                    <span key={k} className="tag">{k}</span>
-                  ))}
-                </div>
-              )}
-              <div className="content">{m.content}</div>
-              {m.metadata?.sources && <SourcesList sources={m.metadata.sources} />}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-### SSE-подписка (React hook)
-
-    function useChatStream() {
-      const [isStreaming, setIsStreaming] = useState(false);
-      const [tokens, setTokens] = useState({});
-
-      const start = useCallback(async (payload, apiKey, onDone) => {
-        setIsStreaming(true);
-        setTokens({});
-
-        const response = await fetch('/nexus-proxy/chat/stream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '...' },
-          body: JSON.stringify(payload)
-        });
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const events = buffer.split('\n\n');
-          buffer = events.pop();
-
-          for (const ev of events) {
-            const t = (ev.match(/^event: (.+)$/m) || [])[1];
-            const d = (ev.match(/^data: (.+)$/m) || [])[1];
-            if (!d) continue;
-            const payload = JSON.parse(d);
-
-            if (t === 'token') {
-              setTokens(prev => ({
-                ...prev,
-                [payload.expert]: (prev[payload.expert] || '') + payload.delta
-              }));
-            } else if (t === 'done') {
-              onDone?.(payload);
-            }
-          }
-        }
-        setIsStreaming(false);
-      }, []);
-
-      return { isStreaming, tokens, start };
-    }
+- Разметку и серверно-управляемые состояния реализуйте на Blade и Livewire.
+- Используйте Alpine.js для небольших локальных интеракций; не создавайте на его
+  основе отдельное SPA.
+- TypeScript-модуль допускается только для парсинга/обработки браузерного SSE
+  чата через Laravel-прокси (`fetch` + `ReadableStream`), без секретов NEXUS AI.
 
 ---
 
@@ -530,7 +450,8 @@ UI не общается с NEXUS AI напрямую.
 
 5. **Отдельный экран «Аудит» для админа.** Это журнал всех действий.
 
-6. **Timeout 300 сек минимум на клиенте.** На CPU thinking-ответ может занять 4–5 минут.
+6. **Согласуйте таймауты на всём пути SSE.** На CPU thinking-ответ может занять
+   4–5 минут; настройте клиент, Laravel, upstream и reverse proxy соответственно.
 
 7. **Показывайте rate limit.** Заголовки X-RateLimit-Remaining — пользователь видит, сколько осталось.
 
@@ -598,12 +519,15 @@ UI не общается с NEXUS AI напрямую.
 **Прототип** для тестирования всех функций API без curl.  
 **Референс** для продакшн-админки на Laravel 12 (PhpStorm).
 
+API-ключ в localStorage и SPA относятся только к отладочному прототипу, не к
+целевому пользовательскому интерфейсу; не переносите этот подход в Laravel UI.
+
 ### Отличия от продакшн-админки
 
 | Характеристика | Прототип (debug) | Продакшн (Laravel) |
 |---------------|------------------|-------------------|
 | Аутентификация | API-ключ в localStorage | Сессия Laravel + роли |
-| Сборка | Нет | Vite / Laravel Mix |
+| Сборка | Нет | Laravel Vite |
 | Стиль | Vanilla CSS | Blade / Tailwind |
 | Пользователи | Один ключ | Многопользовательский |
 | Доступ | /debug/admin/ | /admin/ |
