@@ -24,6 +24,7 @@ class AuthenticationTest extends TestCase
             ->assertOk()
             ->assertSee('lang="ru"', false)
             ->assertSee('С возвращением')
+            ->assertDontSee('Забыли пароль?')
             ->assertSee('images/nexus-logo.png');
     }
 

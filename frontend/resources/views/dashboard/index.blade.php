@@ -1,4 +1,8 @@
 <x-app-layout title="Обзор">
+    @if (session('status'))
+        <div class="notice notice-success" role="status">{{ session('status') }}</div>
+    @endif
+
     <section class="welcome-row">
         <div>
             <div class="eyebrow"><span class="eyebrow-line"></span> ВАША ЗАЩИЩЁННАЯ AI-РАБОЧАЯ ОБЛАСТЬ</div>

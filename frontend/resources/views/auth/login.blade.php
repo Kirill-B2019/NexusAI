@@ -11,10 +11,7 @@
             @error('email') <p class="field-error">{{ $message }}</p> @enderror
         </div>
         <div class="field">
-            <div class="field-label-row">
-                <label for="password">Пароль</label>
-                <a class="text-link" href="{{ route('password.request') }}">Забыли пароль?</a>
-            </div>
+            <label for="password">Пароль</label>
             <input id="password" name="password" type="password" autocomplete="current-password" required>
             @error('password') <p class="field-error">{{ $message }}</p> @enderror
         </div>
