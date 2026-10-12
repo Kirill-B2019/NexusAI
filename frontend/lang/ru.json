@@ -1,0 +1,11 @@
+{
+    "Reset Password Notification": "Уведомление о сбросе пароля",
+    "You are receiving this email because we received a password reset request for your account.": "Вы получили это письмо, потому что для вашей учётной записи был запрошен сброс пароля.",
+    "Reset Password": "Сбросить пароль",
+    "This password reset link will expire in :count minutes.": "Срок действия ссылки для сброса пароля истечёт через :count мин.",
+    "If you did not request a password reset, no further action is required.": "Если вы не запрашивали сброс пароля, никаких дополнительных действий не требуется.",
+    "Regards": "С уважением",
+    "Hello!": "Здравствуйте!",
+    "Whoops!": "Ошибка!",
+    "All rights reserved.": "Все права защищены."
+}
