@@ -51,14 +51,14 @@
                     <span>Обзор</span>
                     <span class="nav-active-dot"></span>
                 </a>
-                <span class="nav-item nav-disabled" aria-disabled="true" title="Появится в следующих обновлениях">
+                <a class="nav-item {{ request()->routeIs('projects') ? 'is-active' : '' }}" href="{{ route('projects') }}">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h7l2 2h8v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 7.5v-2a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/></svg>
-                    <span>Проекты</span><span class="nav-soon">СКОРО</span>
-                </span>
-                <span class="nav-item nav-disabled" aria-disabled="true" title="Появится в следующих обновлениях">
+                    <span>Проекты</span>
+                </a>
+                <a class="nav-item {{ request()->routeIs('chat') ? 'is-active' : '' }}" href="{{ route('chat') }}">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 4 8v8l8 4.5 8-4.5V8z"/><path d="m4.5 8.2 7.5 4.3 7.5-4.3M12 12.5v8"/></svg>
-                    <span>AI-студия</span><span class="nav-soon">СКОРО</span>
-                </span>
+                    <span>AI-студия</span>
+                </a>
                 <span class="nav-item nav-disabled" aria-disabled="true" title="Появится в следующих обновлениях">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5Z"/><path d="M7.5 8h9M7.5 12h9M7.5 16h5"/></svg>
                     <span>База знаний</span><span class="nav-soon">СКОРО</span>
@@ -78,6 +78,10 @@
 
                 @can('manage-users')
                     <span class="nav-caption nav-caption-spaced">АДМИНИСТРИРОВАНИЕ</span>
+                    <a class="nav-item {{ request()->routeIs('admin.projects') ? 'is-active' : '' }}" href="{{ route('admin.projects') }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h7l2 2h8v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 7.5v-2a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/></svg>
+                        <span>Назначение проектов</span>
+                    </a>
                     <a class="nav-item {{ request()->routeIs('admin.users') ? 'is-active' : '' }}" href="{{ route('admin.users') }}">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20M9 10.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM16 3a4 4 0 0 1 0 7.8M22 20v-1.5a4 4 0 0 0-3-3.9"/></svg>
                         <span>Пользователи</span>
@@ -88,7 +92,13 @@
             <div class="sidebar-bottom">
                 <div class="connection-card">
                     <span class="connection-icon"><i class="status-dot status-dot-muted"></i></span>
-                    <span><strong>API не подключён</strong><small>Только интерфейс</small></span>
+                    <span>
+                        @if (filled(config('services.nexus_ai.url')))
+                            <strong>Адрес NEXUS AI настроен</strong><small>Серверный прокси</small>
+                        @else
+                            <strong>API не подключён</strong><small>Только интерфейс</small>
+                        @endif
+                    </span>
                     <span class="connection-indicator"></span>
                 </div>
                 <div class="sidebar-footnote">

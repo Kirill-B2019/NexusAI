@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminProjectController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\ChatStreamController;
 use App\Http\Controllers\ExpertController;
 use App\Http\Controllers\PasswordChangeController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SessionActivityController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +26,23 @@ Route::middleware(['auth', 'idle.timeout'])->group(function () {
 
     Route::middleware('password.change')->group(function () {
         Route::view('/dashboard', 'dashboard.index')->name('dashboard');
+
+        Route::get('/projects', [ProjectController::class, 'index'])
+            ->middleware('can:view-projects')
+            ->name('projects');
+        Route::get('/chat', [ProjectController::class, 'chat'])
+            ->middleware('can:view-projects')
+            ->name('chat');
+        Route::post('/chat/stream', ChatStreamController::class)
+            ->middleware(['can:view-projects', 'throttle:20,1'])
+            ->name('chat.stream');
+
+        Route::get('/admin/projects', [AdminProjectController::class, 'index'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->name('admin.projects');
+        Route::post('/admin/projects', [AdminProjectController::class, 'store'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->name('admin.projects.store');
 
         Route::get('/admin/experts', [ExpertController::class, 'index'])
             ->middleware(['role:admin', 'can:manage-users'])

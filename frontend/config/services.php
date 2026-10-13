@@ -40,6 +40,7 @@ return [
         'admin_key' => env('NEXUS_AI_ADMIN_KEY'),
         'connect_timeout' => (int) env('NEXUS_AI_CONNECT_TIMEOUT', 5),
         'timeout' => (int) env('NEXUS_AI_TIMEOUT', 20),
+        'stream_timeout' => (int) env('NEXUS_AI_STREAM_TIMEOUT', 900),
     ],
 
 ];

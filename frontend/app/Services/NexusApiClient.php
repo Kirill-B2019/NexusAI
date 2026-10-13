@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Exceptions\NexusApiException;
+use App\Models\Project;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -14,35 +16,14 @@ class NexusApiClient
      */
     public function listExperts(): array
     {
-        $url = config('services.nexus_ai.url');
         $adminKey = config('services.nexus_ai.admin_key');
-
-        if (
-            ! is_string($url)
-            || trim($url) === ''
-            || filter_var($url, FILTER_VALIDATE_URL) === false
-        ) {
-            throw NexusApiException::missingConfiguration('NEXUS_AI_URL');
-        }
-
-        $urlParts = parse_url($url);
-
-        if (
-            ! is_array($urlParts)
-            || ! in_array($urlParts['scheme'] ?? null, ['http', 'https'], true)
-            || empty($urlParts['host'])
-            || isset($urlParts['user'])
-            || isset($urlParts['pass'])
-        ) {
-            throw NexusApiException::missingConfiguration('NEXUS_AI_URL');
-        }
 
         if (! is_string($adminKey) || trim($adminKey) === '') {
             throw NexusApiException::missingConfiguration('NEXUS_AI_ADMIN_KEY');
         }
 
         try {
-            $response = Http::baseUrl(rtrim($url, '/'))
+            $response = Http::baseUrl($this->baseUrl())
                 ->acceptJson()
                 ->withHeader('X-API-Key', $adminKey)
                 ->connectTimeout((int) config('services.nexus_ai.connect_timeout', 5))
@@ -60,6 +41,63 @@ class NexusApiClient
         }
 
         return $this->parseExperts($response);
+    }
+
+    public function streamChat(Project $project, string $message): Response
+    {
+        try {
+            $projectKey = $project->api_key;
+        } catch (DecryptException $exception) {
+            throw new NexusApiException('The project API key could not be decrypted.', previous: $exception);
+        }
+
+        if (! is_string($projectKey) || trim($projectKey) === '') {
+            throw NexusApiException::missingConfiguration('project API key');
+        }
+
+        $timeout = max(1, (int) config('services.nexus_ai.stream_timeout', 900));
+
+        try {
+            return Http::baseUrl($this->baseUrl())
+                ->accept('text/event-stream')
+                ->withHeader('X-API-Key', $projectKey)
+                ->connectTimeout(max(1, (int) config('services.nexus_ai.connect_timeout', 5)))
+                ->timeout($timeout)
+                ->withOptions([
+                    'stream' => true,
+                    'read_timeout' => $timeout,
+                ])
+                ->post('/v1/chat/stream', [
+                    'message' => $message,
+                    'project_id' => $project->nexus_project_id,
+                    'use_rag' => true,
+                ]);
+        } catch (ConnectionException $exception) {
+            throw new NexusApiException('Could not connect to the NEXUS AI chat stream.', previous: $exception);
+        }
+    }
+
+    private function baseUrl(): string
+    {
+        $url = config('services.nexus_ai.url');
+
+        if (! is_string($url) || trim($url) === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw NexusApiException::missingConfiguration('NEXUS_AI_URL');
+        }
+
+        $urlParts = parse_url($url);
+
+        if (
+            ! is_array($urlParts)
+            || ! in_array($urlParts['scheme'] ?? null, ['http', 'https'], true)
+            || empty($urlParts['host'])
+            || isset($urlParts['user'])
+            || isset($urlParts['pass'])
+        ) {
+            throw NexusApiException::missingConfiguration('NEXUS_AI_URL');
+        }
+
+        return rtrim($url, '/');
     }
 
     /**
