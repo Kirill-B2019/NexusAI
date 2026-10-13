@@ -12,19 +12,26 @@ class Project extends Model
     protected $fillable = [
         'owner_user_id',
         'name',
+        'description',
+        'metadata',
         'nexus_project_id',
+        'nexus_api_key_id',
+        'pending_revoke_key_id',
         'api_key',
     ];
 
     protected $hidden = [
         'api_key',
         'nexus_project_id',
+        'nexus_api_key_id',
+        'pending_revoke_key_id',
     ];
 
     protected function casts(): array
     {
         return [
             'api_key' => 'encrypted',
+            'metadata' => 'array',
         ];
     }
 

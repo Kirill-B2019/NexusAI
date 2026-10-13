@@ -18,14 +18,47 @@ class ProjectAccessTest extends TestCase
     {
         $admin = User::factory()->create(['role' => UserRole::Admin]);
         $owner = User::factory()->create(['role' => UserRole::User]);
-        $apiKey = 'project-scoped-test-key';
+        $apiKey = 'nx_project-scoped-test-key';
+        $nexusProjectId = '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a';
+        $nexusKeyId = '4a216802-1949-4e0b-9a3e-7bbfcb2fe982';
+        config([
+            'services.nexus_ai.url' => 'https://nexus.test',
+            'services.nexus_ai.admin_key' => 'admin-test-key',
+        ]);
+        Http::fake(function (Request $request) use ($apiKey, $nexusProjectId, $nexusKeyId) {
+            if ($request->method() === 'POST' && $request->url() === 'https://nexus.test/v1/projects') {
+                return Http::response([
+                    'id' => $nexusProjectId,
+                    'name' => 'Исследовательский проект',
+                    'description' => null,
+                    'metadata' => [],
+                ], 201);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://nexus.test/v1/projects/'.$nexusProjectId.'/keys') {
+                return Http::response(['id' => $nexusKeyId, 'key' => $apiKey], 201);
+            }
+
+            if ($request->method() === 'GET' && $request->url() === 'https://nexus.test/v1/projects') {
+                return Http::response(['projects' => [[
+                    'id' => $nexusProjectId,
+                    'name' => 'Исследовательский проект',
+                    'description' => null,
+                    'metadata' => [],
+                ]]]);
+            }
+
+            if ($request->method() === 'GET' && $request->url() === 'https://nexus.test/v1/projects/'.$nexusProjectId.'/keys') {
+                return Http::response(['keys' => []]);
+            }
+
+            return Http::response([], 404);
+        });
 
         $this->actingAs($admin)
             ->post(route('admin.projects.store'), [
                 'owner_user_id' => $owner->id,
                 'name' => 'Исследовательский проект',
-                'nexus_project_id' => '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a',
-                'api_key' => $apiKey,
             ])
             ->assertRedirect(route('admin.projects'))
             ->assertSessionMissing('_old_input.api_key')
@@ -34,6 +67,8 @@ class ProjectAccessTest extends TestCase
         $project = Project::query()->where('name', 'Исследовательский проект')->firstOrFail();
 
         $this->assertSame($owner->id, $project->owner_user_id);
+        $this->assertSame($nexusProjectId, $project->nexus_project_id);
+        $this->assertSame($nexusKeyId, $project->nexus_api_key_id);
         $this->assertSame($apiKey, $project->api_key);
         $this->assertNotSame($apiKey, $project->getRawOriginal('api_key'));
         $this->assertStringNotContainsString($apiKey, $project->toJson());
@@ -44,6 +79,10 @@ class ProjectAccessTest extends TestCase
             ->assertSee('Исследовательский проект')
             ->assertSee($owner->email)
             ->assertDontSee($apiKey);
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+            && $request->url() === 'https://nexus.test/v1/projects/'.$nexusProjectId.'/keys'
+            && $request->hasHeader('X-API-Key', 'admin-test-key'));
     }
 
     public function test_invalid_project_form_never_flashes_the_project_key_back_to_the_browser(): void
@@ -56,10 +95,9 @@ class ProjectAccessTest extends TestCase
             ->post(route('admin.projects.store'), [
                 'owner_user_id' => 999999,
                 'name' => 'Недопустимый проект',
-                'nexus_project_id' => 'not-a-uuid',
                 'api_key' => $apiKey,
             ])
-            ->assertSessionHasErrors(['owner_user_id', 'nexus_project_id'])
+            ->assertSessionHasErrors(['owner_user_id'])
             ->assertSessionMissing('_old_input.api_key');
 
         $this->get(route('admin.projects'))

@@ -43,6 +43,39 @@ Route::middleware(['auth', 'idle.timeout'])->group(function () {
         Route::post('/admin/projects', [AdminProjectController::class, 'store'])
             ->middleware(['role:admin', 'can:manage-users'])
             ->name('admin.projects.store');
+        Route::patch('/admin/projects/{nexusProjectId}', [AdminProjectController::class, 'update'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.update');
+        Route::post('/admin/projects/{nexusProjectId}/link', [AdminProjectController::class, 'link'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.link');
+        Route::put('/admin/projects/{nexusProjectId}/assignment', [AdminProjectController::class, 'assign'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.assignment');
+        Route::post('/admin/projects/{nexusProjectId}/keys/rotate', [AdminProjectController::class, 'rotateKey'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.keys.rotate');
+        Route::post('/admin/projects/{nexusProjectId}/keys/retry-revoke', [AdminProjectController::class, 'retryPendingRevoke'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.keys.retry-revoke');
+        Route::delete('/admin/projects/{nexusProjectId}/keys', [AdminProjectController::class, 'revokeKey'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.keys.revoke');
+        Route::delete('/admin/projects/{nexusProjectId}/application-keys/{keyId}', [AdminProjectController::class, 'revokeExternalKey'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->whereUuid('keyId')
+            ->name('admin.projects.application-keys.revoke');
+        Route::delete('/admin/projects/{nexusProjectId}', [AdminProjectController::class, 'destroy'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->whereUuid('nexusProjectId')
+            ->name('admin.projects.destroy');
 
         Route::get('/admin/experts', [ExpertController::class, 'index'])
             ->middleware(['role:admin', 'can:manage-users'])

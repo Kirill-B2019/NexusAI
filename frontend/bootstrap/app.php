@@ -23,5 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->dontFlash([
+            'api_key',
+            'project_api_key',
+            'nexus_api_key',
+            'NEXUS_AI_ADMIN_KEY',
+            'secret',
+            'key',
+        ]);
     })->create();

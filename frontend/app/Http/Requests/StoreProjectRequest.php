@@ -2,36 +2,51 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Project;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
+use stdClass;
 
 class StoreProjectRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', Project::class) ?? false;
+        return $this->user()?->can('manage-users') ?? false;
     }
 
     public function rules(): array
     {
         return [
-            'owner_user_id' => ['required', 'integer', Rule::exists('users', 'id')],
-            'name' => ['required', 'string', 'max:120'],
-            'nexus_project_id' => ['required', 'uuid', Rule::unique('projects', 'nexus_project_id')],
-            'api_key' => ['required', 'string', 'min:1', 'max:4096'],
+            'owner_user_id' => ['required', 'integer', 'exists:users,id'],
+            'name' => ['required', 'string', 'min:2', 'max:200'],
+            'description' => ['nullable', 'string', 'max:10000'],
+            'metadata' => ['nullable', 'string', 'json', 'max:10000'],
         ];
     }
 
-    protected function failedValidation(Validator $validator): never
+    public function after(): array
     {
-        $response = redirect()
-            ->to($this->getRedirectUrl())
-            ->withErrors($validator, $this->errorBag)
-            ->withInput($this->except('api_key'));
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->has('metadata') || blank($this->input('metadata'))) {
+                    return;
+                }
 
-        throw new ValidationException($validator, $response);
+                $metadata = json_decode($this->string('metadata')->toString());
+
+                if (! $metadata instanceof stdClass) {
+                    $validator->errors()->add('metadata', 'Метаданные должны быть JSON-объектом.');
+                }
+            },
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function metadataObject(): array
+    {
+        $metadata = $this->input('metadata');
+
+        return filled($metadata) ? (array) json_decode($metadata, false, 512, JSON_THROW_ON_ERROR) : [];
     }
 }

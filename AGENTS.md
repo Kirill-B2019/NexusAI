@@ -7,6 +7,7 @@
 - TypeScript is allowed only for isolated browser-side logic for the SSE chat, using `fetch` and `ReadableStream`.
 - Laravel owns user accounts, sessions, roles, authorization, and the server-side proxy to the FastAPI NEXUS AI service. Keep NEXUS AI a separate API-first FastAPI service; make Laravel backend changes only for the integrations the UI needs.
 - Never expose NEXUS AI API keys or other secrets to the browser.
+- Keep external-application key issuance disabled until an approved server-to-server secret-delivery integration is configured. Do not issue keys that cannot be delivered safely.
 - Proxy SSE streams without buffering and configure suitable upstream, server, and proxy timeouts for long-running responses.
 - Verify API contracts against the actual FastAPI routers before implementing integrations; written documentation may be out of date.
 - Follow the shared UI Kit, Laravel code-organization, accessibility, and testing standards in `docs/UI.md`; reuse kit components and extend them instead of creating one-off UI patterns.
