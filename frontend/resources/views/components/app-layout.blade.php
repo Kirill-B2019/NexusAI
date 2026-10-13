@@ -64,10 +64,17 @@
                     <span>База знаний</span><span class="nav-soon">СКОРО</span>
                 </span>
                 <span class="nav-caption nav-caption-spaced">ИНТЕЛЛЕКТ</span>
-                <span class="nav-item nav-disabled" aria-disabled="true" title="Появится в следующих обновлениях">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a6 6 0 0 0-3.5 10.9V18h7v-3.6A6 6 0 0 0 12 3.5Z"/><path d="M9.5 21h5M9.5 18h5M12 1.5v-1M4.6 4.6l-.8-.8M19.4 4.6l.8-.8"/></svg>
-                    <span>Эксперты</span><span class="nav-soon">СКОРО</span>
-                </span>
+                @can('manage-users')
+                    <a class="nav-item {{ request()->routeIs('admin.experts') ? 'is-active' : '' }}" href="{{ route('admin.experts') }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a6 6 0 0 0-3.5 10.9V18h7v-3.6A6 6 0 0 0 12 3.5Z"/><path d="M9.5 21h5M9.5 18h5M12 1.5v-1M4.6 4.6l-.8-.8M19.4 4.6l.8-.8"/></svg>
+                        <span>Эксперты</span>
+                    </a>
+                @else
+                    <span class="nav-item nav-disabled" aria-disabled="true" title="Появится в следующих обновлениях">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a6 6 0 0 0-3.5 10.9V18h7v-3.6A6 6 0 0 0 12 3.5Z"/><path d="M9.5 21h5M9.5 18h5M12 1.5v-1M4.6 4.6l-.8-.8M19.4 4.6l.8-.8"/></svg>
+                        <span>Эксперты</span><span class="nav-soon">СКОРО</span>
+                    </span>
+                @endcan
 
                 @can('manage-users')
                     <span class="nav-caption nav-caption-spaced">АДМИНИСТРИРОВАНИЕ</span>

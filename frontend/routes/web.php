@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\ExpertController;
 use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\SessionActivityController;
 use App\Models\User;
@@ -22,6 +23,10 @@ Route::middleware(['auth', 'idle.timeout'])->group(function () {
 
     Route::middleware('password.change')->group(function () {
         Route::view('/dashboard', 'dashboard.index')->name('dashboard');
+
+        Route::get('/admin/experts', [ExpertController::class, 'index'])
+            ->middleware(['role:admin', 'can:manage-users'])
+            ->name('admin.experts');
 
         Route::get('/admin/users', function () {
             return view('dashboard.users', [

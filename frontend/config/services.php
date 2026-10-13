@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'nexus_ai' => [
+        'url' => env('NEXUS_AI_URL'),
+        'admin_key' => env('NEXUS_AI_ADMIN_KEY'),
+        'connect_timeout' => (int) env('NEXUS_AI_CONNECT_TIMEOUT', 5),
+        'timeout' => (int) env('NEXUS_AI_TIMEOUT', 20),
+    ],
+
 ];
