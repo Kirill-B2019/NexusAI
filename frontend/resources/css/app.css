@@ -358,3 +358,21 @@ button { color: inherit; }
     .auth-heading h1 { font-size: 25px; }
     .auth-footer { font-size: 9px; }
 }
+
+.chat-panel { display: grid; gap: 20px; }
+.chat-form { display: grid; gap: 19px; }
+.field-label { color: #dce1d8; font-size: 12px; font-weight: 600; }
+.chat-routing { display: flex; align-items: center; gap: 10px; }
+.chat-form textarea { width: 100%; min-height: 132px; padding: 12px 13px; resize: vertical; color: var(--text); border: 1px solid #353c35; border-radius: 8px; background: #121512; font: inherit; line-height: 1.6; }
+.chat-form textarea:focus { border-color: rgba(197,245,66,.75); box-shadow: 0 0 0 3px rgba(197,245,66,.09); outline: none; }
+.chat-form textarea::placeholder { color: #646d64; }
+.field-hint { margin: 0; color: #7e887b; font-size: 10px; line-height: 1.5; }
+.chat-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-top: 16px; border-top: 1px solid #2b312b; }
+.chat-status { color: #9ba49a; font-size: 10px; line-height: 1.5; }
+.chat-output { max-height: min(58vh, 680px); margin: 0; padding: 20px; overflow: auto; border: 1px solid #2a302a; border-radius: 9px; color: #dce4d8; background: #111411; font: 12px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 620px) {
+    .chat-actions { align-items: stretch; flex-direction: column; }
+    .chat-routing { align-items: flex-start; flex-direction: column; }
+    .chat-output { padding: 15px; font-size: 11px; }
+}

@@ -34,7 +34,7 @@ Route::middleware(['auth', 'idle.timeout'])->group(function () {
             ->middleware('can:view-projects')
             ->name('chat');
         Route::post('/chat/stream', ChatStreamController::class)
-            ->middleware(['can:view-projects', 'throttle:20,1'])
+            ->middleware(['can:manage-projects', 'throttle:20,1'])
             ->name('chat.stream');
 
         Route::get('/admin/projects', [AdminProjectController::class, 'index'])

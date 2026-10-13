@@ -111,6 +111,53 @@ class ProjectAccessTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_viewers_can_read_the_chat_page_but_cannot_start_a_chat(): void
+    {
+        config(['services.nexus_ai.url' => 'https://nexus.test']);
+        Http::fake();
+        $viewer = User::factory()->create(['role' => UserRole::Viewer]);
+        $project = $this->createProject($viewer, 'Только чтение', '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a');
+
+        $this->actingAs($viewer)
+            ->get(route('chat', ['project' => $project->id]))
+            ->assertOk()
+            ->assertSee('У вашей роли есть доступ только для чтения')
+            ->assertDontSee('data-chat-form');
+
+        $this->postJson(route('chat.stream'), [
+            'project_id' => $project->id,
+            'message' => 'Не отправлять',
+        ])->assertForbidden();
+
+        Http::assertNothingSent();
+    }
+
+    public function test_chat_form_uses_only_assigned_projects_and_never_renders_credentials(): void
+    {
+        config(['services.nexus_ai.url' => 'https://nexus.test']);
+        $owner = User::factory()->create(['role' => UserRole::User]);
+        $otherOwner = User::factory()->create(['role' => UserRole::User]);
+        $projectKey = 'private-project-key-never-render';
+        $project = $this->createProject(
+            $owner,
+            'Доступный проект',
+            '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a',
+            $projectKey,
+        );
+        $this->createProject($otherOwner, 'Недоступный проект', '4a216802-1949-4e0b-9a3e-7bbfcb2fe982');
+
+        $this->actingAs($owner)
+            ->get(route('chat', ['project' => $project->id]))
+            ->assertOk()
+            ->assertSee('data-stream-url="'.route('chat.stream').'"', false)
+            ->assertSee('value="'.$project->id.'" selected', false)
+            ->assertSee('Автовыбор')
+            ->assertSee('Доступный проект')
+            ->assertDontSee('Недоступный проект')
+            ->assertDontSee($projectKey)
+            ->assertDontSee('nexus_project_id');
+    }
+
     public function test_chat_stream_uses_the_authorized_project_key_and_forwards_sse_without_buffering(): void
     {
         config([
@@ -121,7 +168,12 @@ class ProjectAccessTest extends TestCase
         $projectKey = 'project-only-chat-key';
         $nexusProjectId = '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a';
         $project = $this->createProject($owner, 'Проект для чата', $nexusProjectId, $projectKey);
-        $sse = "event: token\ndata: {\"delta\":\"Привет\"}\n\nevent: done\ndata: {\"content\":\"Привет\"}\n\n";
+        $sse = "event: start\ndata: {\"experts_used\":[\"architect\"]}\n\n"
+            ."event: expert_start\ndata: {\"expert\":\"architect\"}\n\n"
+            ."event: token\ndata: {\"expert\":\"architect\",\"delta\":\"Привет\"}\n\n"
+            ."event: reasoning\ndata: {\"expert\":\"architect\",\"delta\":\"скрытая мысль\"}\n\n"
+            ."event: expert_done\ndata: {\"expert\":\"architect\"}\n\n"
+            ."event: done\ndata: {\"summary\":{\"total\":1,\"ok\":1,\"failed\":0}}\n\n";
 
         Http::fake([
             'https://nexus.test/v1/chat/stream' => Http::response($sse, 200, [

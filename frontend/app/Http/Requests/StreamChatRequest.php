@@ -8,7 +8,7 @@ class StreamChatRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('view-projects') ?? false;
+        return $this->user()?->can('manage-projects') ?? false;
     }
 
     public function rules(): array
