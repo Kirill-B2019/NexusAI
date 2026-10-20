@@ -1,0 +1,19 @@
+services:
+  nexus-admin:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: nexus-admin-frontend
+    container_name: nexus-admin
+    env_file:
+      - ../.env
+    ports:
+      - "8081:8081"
+    networks:
+      - nexus_backend
+    restart: unless-stopped
+
+networks:
+  nexus_backend:
+    external: true
+    name: nexus-ai_default

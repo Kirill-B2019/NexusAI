@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Models\ExternalApplicationSecret;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,7 +52,7 @@ class AdminProjectManagementTest extends TestCase
                 'description' => 'Test description',
                 'metadata' => '{"team":"research"}',
             ])
-            ->assertRedirect(route('admin.projects'))
+            ->assertRedirect(route('admin.projects.show', self::PROJECT_ID))
             ->assertSessionHas('status')
             ->assertSessionMissing('_old_input.api_key');
 
@@ -98,7 +99,7 @@ class AdminProjectManagementTest extends TestCase
                 'description' => 'Updated description',
                 'metadata' => '{"team":"platform"}',
             ])
-            ->assertRedirect(route('admin.projects'))
+            ->assertRedirect(route('admin.projects.show', self::PROJECT_ID))
             ->assertSessionHas('status');
 
         $project->refresh();
@@ -128,7 +129,7 @@ class AdminProjectManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.projects.link', self::PROJECT_ID), ['owner_user_id' => $owner->id])
-            ->assertRedirect(route('admin.projects'))
+            ->assertRedirect(route('admin.projects.show', self::PROJECT_ID))
             ->assertSessionHas('status');
 
         $project = Project::query()->where('nexus_project_id', self::PROJECT_ID)->firstOrFail();
@@ -167,7 +168,7 @@ class AdminProjectManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.projects.keys.rotate', self::PROJECT_ID))
-            ->assertRedirect(route('admin.projects'))
+            ->assertRedirect(route('admin.projects.show', self::PROJECT_ID))
             ->assertSessionHas('status', 'Ключ заменён; старый ключ отозван.');
 
         $project->refresh();
@@ -206,7 +207,7 @@ class AdminProjectManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->delete(route('admin.projects.destroy', self::PROJECT_ID), ['confirmation' => 'Wrong project'])
-            ->assertRedirect(route('admin.projects'))
+            ->assertRedirect(route('admin.projects.show', self::PROJECT_ID))
             ->assertSessionHas('error');
 
         Http::assertNotSent(fn (Request $request): bool => $request->method() === 'DELETE');
@@ -221,6 +222,32 @@ class AdminProjectManagementTest extends TestCase
             && $request->url() === 'https://nexus.test/v1/projects/'.self::PROJECT_ID
             && $request->hasHeader('X-API-Key', 'admin-management-key'));
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+    }
+
+    public function test_project_delete_is_blocked_until_managed_application_secrets_are_cleaned_up(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+        ExternalApplicationSecret::query()->create([
+            'project_id' => self::PROJECT_ID,
+            'key_id' => '2a216802-1949-4e0b-9a3e-7bbfcb2fe982',
+            'application_name' => 'Partner app',
+            'secret_name' => 'nexus-ai/application-keys/projects/'.self::PROJECT_ID.'/applications/2a216802-1949-4e0b-9a3e-7bbfcb2fe982',
+            'secret_arn' => 'arn:aws:secretsmanager:us-east-1:123456789012:secret:partner-app',
+        ]);
+
+        Http::fake([
+            'https://nexus.test/v1/projects/'.self::PROJECT_ID => Http::response($this->remoteProject()),
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.projects.destroy', self::PROJECT_ID), [
+                'confirmation' => 'Project from NEXUS',
+            ])
+            ->assertRedirect(route('admin.projects.show', self::PROJECT_ID))
+            ->assertSessionHas('error', 'Сначала отзовите управляемые ключи приложений в карточке проекта, чтобы очистить их секреты AWS.');
+
+        Http::assertNotSent(fn (Request $request): bool => $request->method() === 'DELETE');
+        $this->assertDatabaseHas('external_application_secrets', ['project_id' => self::PROJECT_ID]);
     }
 
     /**

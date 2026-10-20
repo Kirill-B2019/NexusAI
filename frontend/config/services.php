@@ -43,4 +43,10 @@ return [
         'stream_timeout' => (int) env('NEXUS_AI_STREAM_TIMEOUT', 900),
     ],
 
+    'application_key_delivery' => [
+        'enabled' => (bool) env('APPLICATION_KEY_DELIVERY_ENABLED', false),
+        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        'secret_prefix' => env('APPLICATION_KEY_SECRET_PREFIX', 'nexus-ai/application-keys'),
+    ],
+
 ];

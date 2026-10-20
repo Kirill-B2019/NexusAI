@@ -15,6 +15,7 @@ final readonly class NexusProjectApiKey
         public bool $active,
         public ?string $createdAt,
         public ?string $lastUsedAt,
+        public ?string $startsAt,
         public ?string $expiresAt,
     ) {}
 
@@ -34,7 +35,7 @@ final readonly class NexusProjectApiKey
         }
 
         $allowedExperts = $attributes['allowed_experts'] ?? null;
-        $timestamps = ['created_at', 'last_used_at', 'expires_at'];
+        $timestamps = ['created_at', 'last_used_at', 'starts_at', 'expires_at'];
 
         if ($allowedExperts !== null && (! is_array($allowedExperts) || count(array_filter($allowedExperts, 'is_string')) !== count($allowedExperts))) {
             throw NexusApiException::invalidResponse();
@@ -58,6 +59,7 @@ final readonly class NexusProjectApiKey
             active: $attributes['is_active'],
             createdAt: $attributes['created_at'] ?? null,
             lastUsedAt: $attributes['last_used_at'] ?? null,
+            startsAt: $attributes['starts_at'] ?? null,
             expiresAt: $attributes['expires_at'] ?? null,
         );
     }
@@ -75,6 +77,11 @@ final readonly class NexusProjectApiKey
     {
         if (! $this->active) {
             return 'revoked';
+        }
+
+        $now ??= new \DateTimeImmutable;
+        if ($this->startsAt !== null && new \DateTimeImmutable($this->startsAt) > $now) {
+            return 'scheduled';
         }
 
         return $this->isExpired($now) ? 'expired' : 'active';

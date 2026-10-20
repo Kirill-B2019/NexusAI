@@ -26,7 +26,7 @@ class AuthenticationTest extends TestCase
             ->assertSee('lang="ru"', false)
             ->assertSee('С возвращением')
             ->assertDontSee('Забыли пароль?')
-            ->assertSee('images/nexus-logo.png');
+            ->assertSee('images/nexus-ai-brand.webp');
     }
 
     public function test_public_registration_is_disabled(): void
@@ -58,7 +58,10 @@ class AuthenticationTest extends TestCase
         ])->assertRedirect('/dashboard');
 
         $this->assertAuthenticatedAs($user);
-        $this->get('/dashboard')->assertOk()->assertSee('Рады видеть');
+        $this->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Рады видеть')
+            ->assertSee('images/nexus-ai-brand.webp');
 
         $this->post('/logout')->assertRedirect('/login');
 

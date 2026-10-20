@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Models\Project;
 use App\Models\User;
 use App\Policies\ProjectPolicy;
+use App\Services\ApplicationSecretStore;
+use App\Services\AwsSecretsManagerStore;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,7 +18,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            ApplicationSecretStore::class,
+            static fn (): AwsSecretsManagerStore => new AwsSecretsManagerStore,
+        );
     }
 
     /**

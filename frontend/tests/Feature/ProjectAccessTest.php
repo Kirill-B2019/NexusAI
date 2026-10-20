@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\Project;
 use App\Models\User;
+use GuzzleHttp\Psr7\PumpStream;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -60,7 +61,7 @@ class ProjectAccessTest extends TestCase
                 'owner_user_id' => $owner->id,
                 'name' => 'Исследовательский проект',
             ])
-            ->assertRedirect(route('admin.projects'))
+            ->assertRedirect(route('admin.projects.show', $nexusProjectId))
             ->assertSessionMissing('_old_input.api_key')
             ->assertSessionHas('status');
 
@@ -191,6 +192,10 @@ class ProjectAccessTest extends TestCase
             ->assertSee('value="'.$project->id.'" selected', false)
             ->assertSee('Автовыбор')
             ->assertSee('Доступный проект')
+            ->assertSee('class="app-page chat-page"', false)
+            ->assertSee('Enter — отправить · Ctrl+Enter — новая строка')
+            ->assertSee('data-chat-output', false)
+            ->assertSee('| KB @CerberRus00 - Nexus Invest Team')
             ->assertDontSee('Недоступный проект')
             ->assertDontSee($projectKey)
             ->assertDontSee('nexus_project_id');
@@ -234,6 +239,82 @@ class ProjectAccessTest extends TestCase
             && $request->data()['project_id'] === $nexusProjectId
             && $request->data()['message'] === 'Привет, эксперт');
         Http::assertSent(fn (Request $request): bool => ! $request->hasHeader('X-API-Key', 'admin-catalog-key-must-not-be-used'));
+    }
+
+    public function test_chat_stream_reads_and_forwards_upstream_sse_events_incrementally(): void
+    {
+        config(['services.nexus_ai.url' => 'https://nexus.test']);
+        $owner = User::factory()->create(['role' => UserRole::User]);
+        $project = $this->createProject($owner, 'Потоковый проект', '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a');
+        $events = [
+            "event: start\ndata: {\"experts_used\":[\"system_architect\"]}\n\n",
+            "event: expert_start\ndata: {\"expert\":\"system_architect\"}\n\n",
+            "event: token\ndata: {\"expert\":\"system_architect\",\"delta\":\"Первый токен\"}\n\n",
+            "event: token\ndata: {\"expert\":\"system_architect\",\"delta\":\" второй токен\"}\n\n",
+            "event: done\ndata: {\"summary\":{\"total\":1,\"ok\":1,\"failed\":0}}\n\n",
+        ];
+        $expectedStream = implode('', $events);
+        $readSizes = [];
+        $stream = new PumpStream(function (int $length) use (&$events, &$readSizes): string|false {
+            $readSizes[] = $length;
+
+            return array_shift($events) ?: false;
+        });
+
+        Http::fake([
+            'https://nexus.test/v1/chat/stream' => Http::response($stream, 200, [
+                'Content-Type' => 'text/event-stream',
+            ]),
+        ]);
+
+        $response = $this->actingAs($owner)->postJson(route('chat.stream'), [
+            'project_id' => $project->id,
+            'message' => 'Проверьте поток',
+        ])->assertOk();
+
+        $this->assertSame($expectedStream, $response->streamedContent());
+        $this->assertNotEmpty($readSizes);
+        $this->assertSame([1], array_values(array_unique($readSizes)));
+    }
+
+    public function test_manual_expert_selection_is_validated_and_forwarded_to_nexus(): void
+    {
+        config(['services.nexus_ai.url' => 'https://nexus.test']);
+        $owner = User::factory()->create(['role' => UserRole::User]);
+        $project = $this->createProject($owner, 'Проект для экспертов', '81d7a413-2a59-48aa-9e3f-1cc00f2ab32a');
+        Http::fake([
+            'https://nexus.test/v1/chat/stream' => Http::response(
+                "event: done\ndata: {\"summary\":{\"total\":2,\"ok\":2,\"failed\":0}}\n\n",
+                200,
+                ['Content-Type' => 'text/event-stream'],
+            ),
+        ]);
+
+        $this->actingAs($owner)
+            ->postJson(route('chat.stream'), [
+                'project_id' => $project->id,
+                'message' => 'Сравните решения',
+                'expert_mode' => 'manual',
+                'experts' => ['system_architect', 'digital_law'],
+            ])
+            ->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://nexus.test/v1/chat/stream'
+            && $request->data()['experts'] === ['system_architect', 'digital_law']);
+
+        $this->postJson(route('chat.stream'), [
+            'project_id' => $project->id,
+            'message' => 'Слишком много экспертов',
+            'expert_mode' => 'manual',
+            'experts' => ['one', 'two', 'three', 'four', 'five'],
+        ])->assertUnprocessable();
+
+        $this->postJson(route('chat.stream'), [
+            'project_id' => $project->id,
+            'message' => 'Повторный эксперт',
+            'expert_mode' => 'manual',
+            'experts' => ['same', 'same'],
+        ])->assertUnprocessable();
     }
 
     public function test_upstream_chat_errors_do_not_leak_response_bodies_or_project_keys(): void

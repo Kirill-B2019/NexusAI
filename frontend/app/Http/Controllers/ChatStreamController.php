@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\NexusApiException;
 use App\Http\Requests\StreamChatRequest;
+use App\Http\Responses\ProxySseResponse;
 use App\Models\Project;
 use App\Services\NexusApiClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Throwable;
 
 class ChatStreamController extends Controller
 {
@@ -23,8 +23,37 @@ class ChatStreamController extends Controller
         abort_if($project === null, 404);
         Gate::authorize('view', $project);
 
+        // Формируем тело запроса к NEXUS AI
+        $body = [
+            'message' => $request->string('message')->toString(),
+            'project_id' => $project->nexus_project_id,
+            'use_rag' => $request->boolean('use_rag', true),
+        ];
+
+        // Добавляем параметры выбора экспертов
+        $expertMode = $request->input('expert_mode');
+        if ($expertMode === 'single') {
+            $body['expert'] = $request->string('expert')->toString();
+        } elseif ($expertMode === 'manual') {
+            $body['experts'] = $request->input('experts', []);
+        }
+        // auto — ничего не добавляем, сервер сам выбирает
+
+        // Thinking-режим
+        $body['thinking'] = $request->boolean('thinking', false);
+
+        // LLM-агрегатор
+        $body['use_llm_aggregator'] = $request->boolean('use_llm_aggregator', false);
+
+        // Conversation ID для продолжения диалога
+        $conversationId = $request->string('conversation_id')->toString();
+        if ($conversationId !== '') {
+            $body['conversation_id'] = $conversationId;
+            $body['save_to_conversation'] = $request->boolean('save_to_conversation', true);
+        }
+
         try {
-            $upstream = $nexus->streamChat($project, $request->string('message')->toString());
+            $upstream = $nexus->streamChat($project, $body);
         } catch (NexusApiException $exception) {
             Log::warning('NEXUS AI chat request could not be started.', [
                 'status' => $exception->statusCode,
@@ -48,44 +77,6 @@ class ChatStreamController extends Controller
             ], $upstream->status() >= 400 ? $upstream->status() : 502);
         }
 
-        return response()->stream(function () use ($upstream): void {
-            @set_time_limit(0);
-            $body = $upstream->toPsrResponse()->getBody();
-
-            try {
-                while (! $body->eof() && ! connection_aborted()) {
-                    $chunk = $body->read(8192);
-
-                    if ($chunk === '') {
-                        continue;
-                    }
-
-                    echo $chunk;
-
-                    if (ob_get_level() > 0) {
-                        ob_flush();
-                    }
-
-                    flush();
-                }
-            } catch (Throwable $exception) {
-                Log::warning('NEXUS AI SSE stream was interrupted.', [
-                    'exception' => $exception::class,
-                ]);
-
-                if (! connection_aborted()) {
-                    echo "event: error\ndata: {\"message\":\"Поток ответа NEXUS AI прерван.\"}\n\n";
-                    flush();
-                }
-            } finally {
-                $body->close();
-            }
-        }, $upstream->status(), [
-            'Content-Type' => 'text/event-stream; charset=UTF-8',
-            'Cache-Control' => 'no-cache, no-transform',
-            'Connection' => 'keep-alive',
-            'X-Accel-Buffering' => 'no',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return ProxySseResponse::fromUpstream($upstream);
     }
 }

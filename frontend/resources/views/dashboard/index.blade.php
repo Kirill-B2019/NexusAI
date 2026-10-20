@@ -7,7 +7,13 @@
         <div>
             <div class="eyebrow"><span class="eyebrow-line"></span> ВАША ЗАЩИЩЁННАЯ AI-РАБОЧАЯ ОБЛАСТЬ</div>
             <h1>Рады видеть, <span>{{ \Illuminate\Support\Str::of(auth()->user()->name)->explode(' ')->first() }}</span></h1>
-            <p class="welcome-copy">Рабочая область готова. Подключите сервис NEXUS AI, когда будете готовы перейти к следующему шагу.</p>
+            <p class="welcome-copy">
+                @if ($nexusConnection['connected'])
+                    Подключение к NEXUS AI готово. Можно переходить к проектам, документам и диалогам.
+                @else
+                    Рабочая область защищена. Чтобы перейти к проектам, сначала настройте подключение к NEXUS AI.
+                @endif
+            </p>
         </div>
         <div class="welcome-date">
             <span class="date-icon" aria-hidden="true">✳</span>
@@ -20,16 +26,17 @@
         <div class="hero-content">
             <span class="hero-kicker"><i></i> NEXUS AI · ОСНОВА</span>
             <h2>Идеи становятся<br><span>интеллектом.</span></h2>
-            <p>Защищённая рабочая область готова. Следующий шаг — подключение к API NEXUS AI.</p>
-            <span class="hero-note"><span class="hero-note-mark">N</span> Интеграция с API пока не настроена</span>
+            <p>
+                @if ($nexusConnection['connected'])
+                    Подключение настроено. Продолжайте работу с проектами, документами и диалогами.
+                @else
+                    Настройте серверное подключение к NEXUS AI, чтобы начать работу с проектами.
+                @endif
+            </p>
+            <span class="hero-note"><span class="hero-note-mark">N</span> {{ $nexusConnection['connected'] ? 'Серверное соединение активно' : 'Интеграция с API пока недоступна' }}</span>
         </div>
-        <div class="hero-orbit" aria-hidden="true">
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <div class="orbit-core"><span>N</span><i></i></div>
-            <span class="orbit-node orbit-node-one"></span>
-            <span class="orbit-node orbit-node-two"></span>
-            <span class="orbit-node orbit-node-three"></span>
+        <div class="hero-brand-mark">
+            <img src="{{ asset('images/nexus-ai-brand.webp') }}" alt="" aria-hidden="true">
         </div>
         <div class="hero-index" aria-hidden="true">01 <span>/</span> 04</div>
     </section>
@@ -75,10 +82,14 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h15v13h-15zM8 9h8M8 12h5M8 15h3"/><path d="m16.5 15.5 1.5 1.5 3-3"/></svg>
                 </span>
                 <span class="card-overline">ПОДКЛЮЧЕНИЕ NEXUS AI</span>
-                <span class="card-status card-status-muted"><i></i> ОЖИДАЕТ</span>
+                @if ($nexusConnection['connected'])
+                    <span class="card-status"><i></i> ПОДКЛЮЧЕНО</span>
+                @else
+                    <span class="card-status card-status-muted"><i></i> @switch($nexusConnection['status'])@case('not_configured')НЕ НАСТРОЕН@case('no_key')НЕТ КЛЮЧА@case('connection_failed')НЕТ СВЯЗИ@defaultОЖИДАЕТ@endswitch</span>
+                @endif
             </div>
-            <strong class="card-value">Не подключено</strong>
-            <span class="card-caption">Внешние сервисы пока не использовались</span>
+            <strong class="card-value">@if ($nexusConnection['connected'])Подключено@elseНе подключено@endif</strong>
+            <span class="card-caption">@if ($nexusConnection['connected'])Внешние сервисы готовы к работе@else{{ $nexusConnection['message'] }}@endif</span>
             <div class="card-inline-note"><span></span> Ключи API хранятся только на сервере</div>
         </article>
     </section>
@@ -87,7 +98,7 @@
         <article class="panel getting-started">
             <div class="panel-heading">
                 <div><span class="eyebrow">ПЛАН РАЗВИТИЯ</span><h2>Развиваем проект последовательно</h2></div>
-                <span class="step-counter">01 <span>—</span> 04</span>
+                <span class="step-counter">01 <span>—</span> 05</span>
             </div>
             <div class="step-list">
                 <div class="step-item is-complete">
@@ -100,17 +111,35 @@
                     <span class="step-copy"><strong>Ролевой доступ</strong><small>Администратор, пользователь и чтение</small></span>
                     <span class="step-state">ГОТОВО</span>
                 </div>
-                <div class="step-item">
-                    <span class="step-marker"><span>03</span></span>
+                <div class="step-item is-complete">
+                    <span class="step-marker"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8 3 3 6-6"/></svg></span>
                     <span class="step-copy"><strong>Подключить NEXUS AI</strong><small>Настроить серверное соединение с API</small></span>
-                    <span class="step-state step-state-next">СЛЕДУЮЩИЙ ШАГ</span>
+                    <span class="step-state">ГОТОВО</span>
+                </div>
+                <div class="step-item {{ $nexusConnection['connected'] ? 'is-complete' : '' }}">
+                    @if ($nexusConnection['connected'])
+                        <span class="step-marker"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8 3 3 6-6"/></svg></span>
+                    @else
+                        <span class="step-marker"><span>04</span></span>
+                    @endif
+                    <span class="step-copy"><strong>Запустить работу с проектами</strong><small>Документы, эксперты и диалоги</small></span>
+                    <span class="step-state {{ $nexusConnection['connected'] ? '' : 'step-state-next' }}">{{ $nexusConnection['connected'] ? 'ГОТОВО' : 'СЛЕДУЮЩИЙ ШАГ' }}</span>
                 </div>
                 <div class="step-item step-item-last">
-                    <span class="step-marker"><span>04</span></span>
-                    <span class="step-copy"><strong>Запустить работу с проектами</strong><small>Документы, эксперты и диалоги</small></span>
+                    <span class="step-marker"><span>05</span></span>
+                    <span class="step-copy"><strong>База знаний — обучение советников</strong><small>Обучение экспертов на документах проекта</small></span>
                     <span class="step-state">В ПЛАНАХ</span>
                 </div>
             </div>
+            @if ($nexusConnection['connected'])
+                @can('manage-users')
+                    <a class="text-action" href="{{ route('admin.projects') }}">Открыть управление проектами <span aria-hidden="true">→</span></a>
+                @else
+                    <a class="text-action" href="{{ route('projects') }}">Открыть мои проекты <span aria-hidden="true">→</span></a>
+                @endcan
+            @else
+                <p class="access-footnote">После настройки подключения перейдите в раздел «Проекты».</p>
+            @endif
         </article>
 
         <article class="panel access-panel">
@@ -125,10 +154,21 @@
             <div class="permission-row">
                 <span class="permission-check">✓</span><span>Функции согласно роли</span><span class="permission-yes">РАЗРЕШЕНО</span>
             </div>
-            <div class="permission-row permission-row-muted">
-                <span class="permission-lock">⌑</span><span>Управление пользователями</span>
-                <span class="permission-yes">{{ auth()->user()->can('manage-users') ? 'РАЗРЕШЕНО' : 'ТОЛЬКО АДМИН' }}</span>
-            </div>
+            @can('manage-users')
+                <div class="permission-row permission-row-allowed">
+                    <span class="permission-check" aria-hidden="true">✓</span>
+                    <span>Управление пользователями</span>
+                    <span class="permission-yes">ДОСТУП РАЗРЕШЁН</span>
+                </div>
+            @else
+                <div class="permission-row permission-row-muted">
+                    <span class="permission-lock" aria-hidden="true">
+                        <svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>
+                    </span>
+                    <span>Управление пользователями</span>
+                    <span class="permission-restricted">ТРЕБУЕТСЯ АДМИНИСТРАТОР</span>
+                </div>
+            @endcan
             @can('manage-users')
                 <a class="text-action" href="{{ route('admin.users') }}">Настроить доступ <span aria-hidden="true">→</span></a>
             @else
