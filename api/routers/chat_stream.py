@@ -11,9 +11,10 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from auth import verify_api_key, AuthContext, require_project_access
-from middleware import write_audit
+from middleware import request_ip, request_user_agent, write_audit
 import experts_service
 import orchestrator
+import lora_runtime
 import rag
 
 logger = logging.getLogger("chat_stream")
@@ -48,6 +49,7 @@ async def _stream_expert(
     thinking: bool,
     max_tokens: int,
     rag_context: Optional[str],
+    lora: Optional[list] = None,
 ) -> AsyncGenerator[dict, None]:
     """
     Стримит одного эксперта. Yield'ит словари:
@@ -71,6 +73,8 @@ async def _stream_expert(
         "stream": True,
         "chat_template_kwargs": {"enable_thinking": thinking}
     }
+    if lora:
+        payload["lora"] = lora
 
     content_acc = []
     reasoning_acc = []
@@ -230,6 +234,8 @@ async def chat_stream(
             })
 
             all_results = []
+            lora_map = await lora_runtime.published_map()
+            adapters_used = {}
 
             for expert_key in used:
                 if expert_key not in prompts:
@@ -238,13 +244,20 @@ async def chat_stream(
 
                 yield _sse("expert_start", {"expert": expert_key})
 
+                expert_lora = (
+                    lora_runtime.lora_field(lora_map[expert_key])
+                    if expert_key in lora_map else None
+                )
+                if expert_lora:
+                    adapters_used[expert_key] = expert_lora[0]["id"]
+
                 content_parts = []
                 reasoning_parts = []
                 errored = False
 
                 async for chunk in _stream_expert(
                     expert_key, prompts[expert_key], req.message,
-                    req.thinking, max_tokens, rag_context,
+                    req.thinking, max_tokens, rag_context, expert_lora,
                 ):
                     if chunk["type"] == "token":
                         content_parts.append(chunk["delta"])
@@ -294,11 +307,13 @@ async def chat_stream(
             await write_audit(
                 actor=ctx.actor, action=f"chat.stream.{mode}",
                 project_id=req.project_id, api_key_id=ctx.api_key_id,
-                ip=request.client.host if request.client else None,
+                ip=request_ip(request),
+                user_agent=request_user_agent(request),
                 details={
                     "experts_used": used,
                     "elapsed_s": elapsed,
                     "rag_sources": len(rag_sources),
+                    "adapters_used": adapters_used,
                 },
                 request_id=getattr(request.state, "request_id", None),
             )
@@ -309,6 +324,7 @@ async def chat_stream(
                 "aggregated": final,
                 "sources": rag_sources,
                 "elapsed_s": elapsed,
+                "adapters_used": adapters_used,
                 "summary": {
                     "total": len(all_results),
                     "ok": len(ok),

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from auth import verify_api_key, AuthContext, require_project_access
-from middleware import write_audit
+from middleware import request_ip, request_user_agent, write_audit
 import experts_service
 import orchestrator
 import rag
@@ -208,10 +208,12 @@ async def chat(
             actor=ctx.actor, action="chat.single",
             resource_type="expert", resource_id=req.expert,
             project_id=req.project_id, api_key_id=ctx.api_key_id,
-            ip=request.client.host if request.client else None,
+            ip=request_ip(request),
+            user_agent=request_user_agent(request),
             details={"elapsed_s": elapsed, "thinking": req.thinking,
                      "rag_sources": len(rag_sources),
-                     "document_filter": req.document_ids},
+                     "document_filter": req.document_ids,
+                     "adapters_used": r.get("adapters", [])},
             request_id=getattr(request.state, "request_id", None),
         )
 
@@ -280,16 +282,23 @@ async def chat(
         )
         message_ids = {"user": user_msg_id, "assistant": asst_msg_id}
 
+    adapters_used = {
+        r["expert"]: r["adapters"][0]
+        for r in results
+        if r.get("adapters")
+    }
     await write_audit(
         actor=ctx.actor, action=f"chat.{mode}",
         project_id=req.project_id, api_key_id=ctx.api_key_id,
-        ip=request.client.host if request.client else None,
+        ip=request_ip(request),
+        user_agent=request_user_agent(request),
         details={
             "experts_used": used,
             "experts_skipped": decision.get("experts_skipped", []),
             "elapsed_s": elapsed,
             "rag_sources": len(rag_sources),
             "document_filter": req.document_ids,
+            "adapters_used": adapters_used,
         },
         request_id=getattr(request.state, "request_id", None),
     )

@@ -38,6 +38,25 @@ class TimingMiddleware(BaseHTTPMiddleware):
         return response
 
 
+def request_ip(request: Request) -> str | None:
+    """Реальный IP клиента: X-Real-IP (nginx) → X-Forwarded-For → peer."""
+    if request is None:
+        return None
+    real_ip = request.headers.get("X-Real-IP", "").strip()
+    if real_ip:
+        return real_ip
+    forwarded = request.headers.get("X-Forwarded-For", "").strip()
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+
+def request_user_agent(request: Request) -> str | None:
+    if request is None:
+        return None
+    return request.headers.get("User-Agent", "")[:500] or None
+
+
 async def write_audit(
     actor: str,
     action: str,
@@ -61,7 +80,7 @@ async def write_audit(
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             """, actor, action, resource_type, resource_id,
                 project_id, api_key_id,
-                details and __import__("json").dumps(details),
+                details and __import__("json").dumps(details, ensure_ascii=False),
                 ip, user_agent, request_id)
         finally:
             await conn.close()
